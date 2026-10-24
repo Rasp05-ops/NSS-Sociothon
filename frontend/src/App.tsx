@@ -55,9 +55,7 @@ export const App: React.FC = () => {
         )}
         {activeTab === 'rag' && <RulesAssistant />}
         {activeTab === 'impact' && (
-          <ImpactPitch
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
+          <ImpactPitch />
         )}
       </main>
     </div>

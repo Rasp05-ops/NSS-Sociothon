@@ -1,14 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Award,
   BarChart3,
   CheckCircle2,
-  ChevronRight,
   Clock,
   Coins,
   Cpu,
   Layers,
-  PlayCircle,
   Presentation,
   ShieldCheck,
   Sparkles,
@@ -17,72 +15,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-interface ImpactPitchProps {
-  onNavigateTab?: (tabKey: any) => void
-}
-
-export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
-  const [activeStep, setActiveStep] = useState<number>(0)
-
-  const demoSteps = [
-    {
-      time: '0:00 - 0:20',
-      title: 'Problem: The Fixed Schedule Trap',
-      script:
-        'Campuses run rigid 06:00 AM collection schedules regardless of fill level. Mess and hostel bins overflow during weekends, while trucks waste fuel checking empty academic bins. Notice our live risk map with 40 bins colored by Monte-Carlo overflow probability.',
-      tab: 'map',
-    },
-    {
-      time: '0:20 - 0:45',
-      title: 'Forecasting & Anomaly Detection',
-      script:
-        'Our LightGBM model forecasts hourly/daily generation per building with confidence bands, beating seasonal-naive WAPE (8.4% vs 14.2%). It instantly flags anomalies like Central Mess surging +38% following a banquet.',
-      tab: 'dashboard',
-    },
-    {
-      time: '0:45 - 1:15',
-      title: 'Multi-Agent Routing (Planner & Critic)',
-      script:
-        'In the chat, the operator requests: "Plan tonight\'s collection". The Planner computes optimal OR-Tools VRP routes only for bins with overflow risk >= 0.70. The Critic agent rigorously audits route duration against the 240-minute shift limit.',
-      tab: 'chat',
-    },
-    {
-      time: '1:15 - 1:35',
-      title: 'Critic Failure & Automatic Replanning',
-      script:
-        'When a route exceeds vehicle capacity or shift time, the Critic rejects it and the Planner automatically replans with a tightened risk threshold—visible live in our SSE reasoning trace.',
-      tab: 'chat',
-    },
-    {
-      time: '1:35 - 2:00',
-      title: 'Human-in-the-Loop Approval',
-      script:
-        'Agents only create DRAFT work orders. The human supervisor reviews the itinerary and clicks "Approve", instantly updating work order states and dispatching drivers.',
-      tab: 'approvals',
-    },
-    {
-      time: '2:00 - 2:20',
-      title: 'Cited Regulatory Assistant (RAG)',
-      script:
-        'When asked "Can mess food waste be composted on campus?", the system quotes SWM Rules 2016 Rule 4(1)(b) with verified citations. If asked an out-of-scope query, it safely abstains without hallucinating.',
-      tab: 'rag',
-    },
-    {
-      time: '2:20 - 2:40',
-      title: 'MCP Server Extensibility',
-      script:
-        'All 6 tools (bins, forecast, route planning, work orders, KPIs, and rules) are exposed via Model Context Protocol (MCP) to Claude Desktop and external autonomous agents.',
-      tab: 'impact',
-    },
-    {
-      time: '2:40 - 3:00',
-      title: 'Impact, Cost & Scaling Plan',
-      script:
-        'Simulation shows a 56.5% reduction in daily km traveled, saving ~3.5 km/day per truck and eliminating 89% of overflow hours. Ultrasonic ESP32 sensors cost ~INR 650/bin with a 2.4-month payback period.',
-      tab: 'impact',
-    },
-  ]
-
+export const ImpactPitch: React.FC = () => {
   return (
     <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Top Banner */}
@@ -110,14 +43,14 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
             Daily Fleet Efficiency
           </span>
           <div className="font-mono" style={{ fontSize: '3rem', fontWeight: 900, color: '#ffffff', marginTop: '4px' }}>
-            56.5%
+            29.0%
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Total route distance reduced (from 6.19 km to 2.69 km per daily dispatch).
+            Simulated average distance reduced from 2.62 km to 1.86 km per day.
           </p>
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#38bdf8' }}>
             <Truck size={14} />
-            <span>Saves ~1,270 km &amp; ~180 litres diesel / year per campus</span>
+            <span>30-day synthetic replay; live savings depend on route density and policy.</span>
           </div>
         </div>
 
@@ -133,14 +66,14 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
             Sanitation Compliance
           </span>
           <div className="font-mono" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--accent-emerald)', marginTop: '4px' }}>
-            89.0%
+            78.0%
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Reduction in overflow bin-hours across hostels and student mess facilities.
+            Simulated reduction in overflow bin-hours: 1,535 to 337 over 30 days.
           </p>
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#34d399' }}>
             <CheckCircle2 size={14} />
-            <span>Eliminates unhygienic leachate and stray animal incidents</span>
+            <span>Lower overflow exposure; production impact requires live telemetry.</span>
           </div>
         </div>
 
@@ -156,14 +89,14 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
             Unnecessary Stops Avoided
           </span>
           <div className="font-mono" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--accent-amber)', marginTop: '4px' }}>
-            85.0%
+            57.0%
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Trucks stop only at flagged bins (&ge; 70% risk) instead of visiting all 40 bins.
+            Simulated stops reduced from 40 to 17.2 per day.
           </p>
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#fbbf24' }}>
             <Clock size={14} />
-            <span>Shift time drops from 185 min to 36 min (4x labor efficiency)</span>
+            <span>Fewer unnecessary visits; routes remain capacity- and shift-constrained.</span>
           </div>
         </div>
       </div>
@@ -196,13 +129,13 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <td style={{ padding: '12px 14px', fontWeight: 600 }}>Distance Traveled (km/day)</td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>
-                  6.19 km
+                  2.62 km
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                  2.69 km
+                  1.86 km
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                  -56.5% km saved
+                  -29.0% km saved
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -211,34 +144,34 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
                   40 bins (all)
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                  4 - 6 bins (flagged)
+                  17.2 stops/day average
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                  -85.0% empty stops avoided
+                  -57.0% stops
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <td style={{ padding: '12px 14px', fontWeight: 600 }}>Overflow Bin-Hours (30 Days)</td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--risk-high)' }}>
-                  184.2 bin-hours
+                  1,535 bin-hours
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--accent-emerald)' }}>
-                  20.1 bin-hours
+                  337 bin-hours
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                  -89.1% overflow reduction
+                  -78.0% overflow reduction
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <td style={{ padding: '12px 14px', fontWeight: 600 }}>Holdout Forecast WAPE</td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>
-                  14.2% (Seasonal Naive)
+                  32.7% (Seasonal Naive)
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--accent-primary)' }}>
-                  8.4% (LightGBM)
+                  28.2% (LightGBM)
                 </td>
                 <td className="font-mono" style={{ padding: '12px 14px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                  +40.8% accuracy improvement
+                  -13.8% forecast error
                 </td>
               </tr>
               <tr>
@@ -284,7 +217,7 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Estimated Payback Period:</span>
-              <strong className="font-mono" style={{ color: 'var(--accent-emerald)' }}>2.4 Months (Fuel + Labor)</strong>
+              <strong className="font-mono" style={{ color: 'var(--accent-emerald)' }}>To be measured in pilot</strong>
             </div>
           </div>
         </div>
@@ -328,56 +261,6 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
         </div>
       </div>
 
-      {/* Interactive 3-Minute Presentation Demo Guide (docs/demo.md) */}
-      <div className="glass-panel" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <PlayCircle size={22} color="var(--accent-cyan)" />
-          <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-              Interactive 3-Minute Demo Pitch Walkthrough
-            </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Script synced with docs/demo.md. Click any cue card to navigate directly to the relevant screen!
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' }}>
-          {demoSteps.map((step, idx) => (
-            <div
-              key={idx}
-              onClick={() => {
-                setActiveStep(idx)
-                if (onNavigateTab) onNavigateTab(step.tab)
-              }}
-              style={{
-                padding: '16px',
-                borderRadius: '8px',
-                background: activeStep === idx ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
-                border: activeStep === idx ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
-                  {step.time}
-                </span>
-                <span className="badge" style={{ fontSize: '0.65rem' }}>
-                  Tab: {step.tab}
-                </span>
-              </div>
-              <strong style={{ fontSize: '0.88rem' }}>{step.title}</strong>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: 0 }}>
-                {step.script}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

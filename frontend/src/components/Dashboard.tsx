@@ -300,20 +300,20 @@ export const Dashboard: React.FC = () => {
             <div>
               <span style={{ color: 'var(--text-muted)', display: 'block' }}>Model WAPE</span>
               <strong className="font-mono" style={{ color: 'var(--accent-emerald)', fontSize: '0.95rem' }}>
-                {forecast?.wape ? `${(forecast.wape * 100).toFixed(1)}%` : '8.4%'}
+                {forecast?.wape != null ? `${(forecast.wape * 100).toFixed(1)}%` : '—'}
               </strong>
             </div>
             <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
             <div>
               <span style={{ color: 'var(--text-muted)', display: 'block' }}>Seasonal-Naive WAPE</span>
               <strong className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                {forecast?.baseline_wape ? `${(forecast.baseline_wape * 100).toFixed(1)}%` : '14.2%'}
+                {forecast?.baseline_wape != null ? `${(forecast.baseline_wape * 100).toFixed(1)}%` : '—'}
               </strong>
             </div>
             <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)' }}>
               <CheckCircle size={14} />
-              <span>Model &gt; Naive (P0 target met)</span>
+              <span>{forecast && forecast.wape != null && forecast.baseline_wape != null && forecast.wape < forecast.baseline_wape ? 'Model &gt; Naive' : 'Awaiting model metrics'}</span>
             </div>
           </div>
         </div>
