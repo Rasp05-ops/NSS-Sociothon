@@ -28,8 +28,11 @@ def stream_chat(message: str, thread_id: str = "default", resume: dict | None = 
                 p = val["plan"]
                 yield _ev(tid, "planner", "tool_result",
                           {"tool": "plan_routes", "summary": f"{len(p['routes'])} routes, {p['total_km']} km, saves {p['km_saved_pct']}%"})
+                if val.get("plan_summary"):
+                    yield _ev(tid, "planner", "message", {"text": val["plan_summary"]})
             elif node == "critic":
-                yield _ev(tid, "critic", "message", val["critic"])
+                critic = val["critic"]
+                yield _ev(tid, "critic", "message", critic)
             elif node == "dispatcher":
                 yield _ev(tid, "dispatcher", "tool_result", {"work_orders": [w["work_order_id"] for w in val["work_orders"]]})
     yield _ev(tid, "system", "done", {})

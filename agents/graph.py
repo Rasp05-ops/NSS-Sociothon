@@ -4,6 +4,8 @@ Usage:  g = build_graph(); cfg = {"configurable": {"thread_id": "t1"}}
         g.invoke({"request": "plan tonight"}, cfg)           # pauses at approval (returns __interrupt__)
         g.invoke(Command(resume={"approved": True}), cfg)    # resumes, dispatcher creates the work order"""
 import os
+from pathlib import Path
+import json
 from typing import Any, TypedDict
 
 import httpx
@@ -12,6 +14,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt  # noqa: F401  (Command re-exported for callers)
 
 from shared.constants import MAX_STOPS_PER_ROUTE, TRUCK_SHIFT_MIN
+from .llm import ask
 
 BASE = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 http: httpx.Client | None = None  # tests inject a TestClient here
@@ -29,6 +32,7 @@ class State(TypedDict, total=False):
     attempts: int
     risk_threshold: float
     plan: dict[str, Any]
+    plan_summary: str
     critic: dict[str, Any]
     decision: dict[str, Any]
     work_orders: list[dict[str, Any]]
@@ -37,7 +41,27 @@ class State(TypedDict, total=False):
 def planner(s: State) -> State:
     thr = s.get("risk_threshold", 0.7)
     plan = _h().post("/routes/plan", json={"horizon_h": 12, "trucks": 2, "risk_threshold": thr}).raise_for_status().json()
-    return {"plan": plan, "attempts": s.get("attempts", 0) + 1}  # TODO(B): llm.ask() to explain choices
+    summary = (
+        f"{len(plan['routes'])} routes cover {plan['flagged_bin_count']} flagged bins. "
+        f"Total distance is {plan['total_km']} km, saving {plan['km_saved_pct']}% versus the fixed route."
+    )
+    if os.getenv("GEMINI_API_KEY"):
+        prompt_path = Path(__file__).parent / "prompts" / "planner.md"
+        prompt = (
+            f"{prompt_path.read_text()}\n\n"
+            f"Tool result (JSON):\n{json.dumps(plan, sort_keys=True)}"
+        )
+        try:
+            generated = ask(prompt, system="You are the Planner agent.")
+            if generated.strip():
+                summary = generated.strip()
+        except RuntimeError:
+            pass
+    return {
+        "plan": plan,
+        "plan_summary": summary,
+        "attempts": s.get("attempts", 0) + 1,
+    }
 
 
 def critic(s: State) -> State:
@@ -49,7 +73,21 @@ def critic(s: State) -> State:
             issues.append(f"{r['route_id']}: {len(r['stops'])} stops exceeds {MAX_STOPS_PER_ROUTE}")
     if not s["plan"]["routes"]:
         issues.append("no routes produced")
-    return {"critic": {"ok": not issues, "issues": issues}}
+    critic_result = {"ok": not issues, "issues": issues}
+    if issues and os.getenv("GEMINI_API_KEY"):
+        prompt_path = Path(__file__).parent / "prompts" / "critic.md"
+        prompt = (
+            f"{prompt_path.read_text()}\n\n"
+            f"Proposed plan (JSON):\n{json.dumps(s['plan'], sort_keys=True)}\n"
+            f"Deterministic issues:\n{json.dumps(issues)}"
+        )
+        try:
+            reasoning = ask(prompt, system="You are the Critic agent.")
+            if reasoning.strip():
+                critic_result["reasoning"] = reasoning.strip()
+        except RuntimeError:
+            pass
+    return {"critic": critic_result}
 
 
 def after_critic(s: State) -> str:
