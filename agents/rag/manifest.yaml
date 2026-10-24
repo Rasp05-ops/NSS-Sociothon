@@ -1,8 +1,8 @@
 # OWNER: B. Corpus manifest. Put raw files in agents/rag/corpus/ (gitignored if large). Cite ONLY what is actually indexed.
 # Download the official texts yourselves and verify clause numbers against the real documents.
 docs:
-  - id: swm-rules-2016
-    title: Solid Waste Management Rules, 2016 (India)
+  - id: swm-rules
+    title: Solid Waste Management Rules (official consolidated text)
     file: corpus/swm_rules_2016.pdf
     chunking: clause        # split on rule/clause headings; keep parent rule title in metadata
   - id: pwm-rules

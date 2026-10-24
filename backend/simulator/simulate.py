@@ -34,7 +34,7 @@ def run(days: int, db: Path, seed: int = 42):
     con.executescript(Path(__file__).parents[1].joinpath("migrations/001_init.sql").read_text())
     con.executemany("INSERT INTO bins VALUES (:bin_id,:building_id,:lat,:lon,:capacity_l,:category)", bins)
     nbins = {k: v["bins"] for k, v in BUILDINGS.items()}
-    rows, cols, overflow_hours = [], [], 0
+    rows, cols, audits, overflow_hours = [], [], [], 0
     for b in bins:
         bd = BUILDINGS[b["building_id"]]
         kind = bd["kind"]
@@ -43,6 +43,9 @@ def run(days: int, db: Path, seed: int = 42):
         cap_kg = b["capacity_l"] * WASTE_DENSITY_KG_PER_L
         w = HOURLY[kind]
         wsum = sum(w)
+        if b["bin_id"].endswith("-01"):
+            audit_pct = {"hostel": 74.0, "mess": 84.0, "academic": 78.0, "library": 81.0}[kind]
+            audits.append((start.isoformat(), b["building_id"], audit_pct, "sim"))
         fill = rng.uniform(2, 15)
         for i in range(days * 24):
             t = start + timedelta(hours=i)
@@ -59,6 +62,7 @@ def run(days: int, db: Path, seed: int = 42):
             rows.append((t.isoformat(), b["bin_id"], round(fill, 2), round(fill / 100 * cap_kg, 2)))
     con.executemany("INSERT INTO readings VALUES (?,?,?,?)", rows)
     con.executemany("INSERT INTO collections VALUES (?,?,?)", cols)
+    con.executemany("INSERT INTO segregation_audits VALUES (?,?,?,?)", audits)
     con.commit()
     con.close()
     print(f"{len(bins)} bins, {len(rows)} readings, {len(cols)} baseline collections, "

@@ -40,6 +40,7 @@ RISK_THRESHOLD = 0.7          # flag bin if P(overflow within horizon) >= this
 DEFAULT_HORIZON_H = 12
 DEFAULT_TRUCKS = 2
 TRUCK_SHIFT_MIN = 240         # max minutes per route (Critic checks this)
+TRUCK_CAPACITY_KG = 120       # maximum collected waste per truck per shift
 MAX_STOPS_PER_ROUTE = 20      # Critic checks this
 WASTE_DENSITY_KG_PER_L = 0.12  # used by simulator: kg = fill_pct/100 * capacity_l * density
 TZ_DISPLAY = "Asia/Kolkata"   # DB/API are ALWAYS UTC; convert only in the UI

@@ -148,24 +148,32 @@ def _get_daily_waste_df(building_id: Optional[str] = None) -> pd.DataFrame:
 def kpis(building_id: Optional[str] = None) -> KPIs:
     """Calculates real KPIs (kg_today, segregation_pct, overflow_count_7d, recycling_pct, wow change)."""
     df = _get_daily_waste_df(building_id)
+    current_plan = plan_routes(RoutePlanRequest(risk_threshold=RISK_THRESHOLD))
     con = get_connection()
     try:
-        # Overflow count in last 7 days
+        # Count overflow incidents (transitions into 100%), not every saturated hour.
         # Find latest timestamp in readings
         max_ts_row = con.execute("SELECT MAX(ts) FROM readings").fetchone()
         if max_ts_row and max_ts_row[0]:
             max_ts = datetime.fromisoformat(max_ts_row[0])
             start_7d = max_ts - timedelta(days=7)
-            if building_id:
-                sql_ovf = """
-                    SELECT COUNT(*) FROM readings r
-                    JOIN bins b ON r.bin_id = b.bin_id
-                    WHERE b.building_id = ? AND r.fill_pct >= 100 AND r.ts >= ?
-                """
-                ovf_count = con.execute(sql_ovf, (building_id, start_7d.isoformat())).fetchone()[0]
-            else:
-                sql_ovf = "SELECT COUNT(*) FROM readings WHERE fill_pct >= 100 AND ts >= ?"
-                ovf_count = con.execute(sql_ovf, (start_7d.isoformat(),)).fetchone()[0]
+            sql_ovf = """
+                SELECT r.ts, r.bin_id, r.fill_pct
+                FROM readings r
+                JOIN bins b ON r.bin_id = b.bin_id
+                WHERE r.ts >= ? {building_filter}
+                ORDER BY r.bin_id, r.ts
+            """.format(building_filter="AND b.building_id = ?" if building_id else "")
+            params = [start_7d.isoformat()] + ([building_id] if building_id else [])
+            overflow_rows = con.execute(sql_ovf, params).fetchall()
+            ovf_count = 0
+            previous = {}
+            for row in overflow_rows:
+                was_overflowing = previous.get(row["bin_id"], False)
+                is_overflowing = float(row["fill_pct"]) >= 100.0
+                if is_overflowing and not was_overflowing:
+                    ovf_count += 1
+                previous[row["bin_id"]] = is_overflowing
         else:
             ovf_count = 0
 
@@ -176,11 +184,7 @@ def kpis(building_id: Optional[str] = None) -> KPIs:
             audits_sql += " WHERE building_id = ?"
             audits_params.append(building_id)
         avg_audit = con.execute(audits_sql, audits_params).fetchone()[0]
-        if avg_audit is None:
-            # Calibrated default for segregation %
-            seg_pct = 78.5 if building_id != "MESS01" else 84.0
-        else:
-            seg_pct = round(float(avg_audit), 1)
+        seg_pct = round(float(avg_audit), 1) if avg_audit is not None else 0.0
     finally:
         con.close()
 
@@ -190,15 +194,16 @@ def kpis(building_id: Optional[str] = None) -> KPIs:
             kg_today=0.0,
             segregation_pct=seg_pct,
             overflow_count_7d=ovf_count,
-            km_saved_pct=55.0,
-            recycling_pct=35.0,
-            waste_change_wow_pct=-3.5,
-            kg_per_person_day=0.20,
+            km_saved_pct=current_plan.km_saved_pct,
+            recycling_pct=0.0,
+            waste_change_wow_pct=0.0,
+            kg_per_person_day=0.0,
             source="real",
         )
 
     daily_totals = df.groupby("date")["add_kg"].sum().sort_index()
-    kg_today = round(float(daily_totals.iloc[-1]), 1) if not daily_totals.empty else 0.0
+    latest_ts = df["ts"].max()
+    kg_today = round(float(df.loc[df["ts"] > latest_ts - pd.Timedelta(hours=24), "add_kg"].sum()), 1)
 
     # Week over week waste change
     if len(daily_totals) >= 14:
@@ -206,30 +211,28 @@ def kpis(building_id: Optional[str] = None) -> KPIs:
         prev_7d = float(daily_totals.iloc[-14:-7].sum())
         wow_change = round(((last_7d - prev_7d) / prev_7d) * 100, 1) if prev_7d > 0 else 0.0
     else:
-        wow_change = -3.2
+        wow_change = 0.0
 
     # Recycling pct: (dry + paper + plastic) / total
     total_kg = float(df["add_kg"].sum())
     recyclable_kg = float(df[df["category"].isin(["dry", "paper", "plastic"])]["add_kg"].sum())
-    recycling_pct = round((recyclable_kg / total_kg) * 100, 1) if total_kg > 0 else 35.0
+    recycling_pct = round((recyclable_kg / total_kg) * 100, 1) if total_kg > 0 else 0.0
 
     # Kg per person per day
     if building_id and building_id in BUILDINGS:
         pop = BUILDINGS[building_id]["population"]
-        kpp = round((last_7d / (pop * 7)), 3) if len(daily_totals) >= 7 else 0.20
+        kpp = round((last_7d / (pop * 7)), 3) if len(daily_totals) >= 7 else 0.0
     else:
         campus_pop = sum(b["population"] for b in BUILDINGS.values())
-        kpp = round((last_7d / (campus_pop * 7)), 3) if len(daily_totals) >= 7 else 0.20
+        kpp = round((last_7d / (campus_pop * 7)), 3) if len(daily_totals) >= 7 else 0.0
 
     # KM saved from current route plan
-    plan = plan_routes(RoutePlanRequest(risk_threshold=RISK_THRESHOLD))
-
     return KPIs(
         building_id=building_id,
         kg_today=kg_today,
         segregation_pct=seg_pct,
         overflow_count_7d=ovf_count,
-        km_saved_pct=plan.km_saved_pct,
+        km_saved_pct=current_plan.km_saved_pct,
         recycling_pct=recycling_pct,
         waste_change_wow_pct=wow_change,
         kg_per_person_day=kpp,
@@ -288,27 +291,31 @@ def compare(days: int = 7) -> CompareResponse:
     period_start = max_ts - timedelta(days=days)
     prev_period_start = period_start - timedelta(days=days)
 
-    for bid, binfo in BUILDINGS.items():
-        b_df = _get_daily_waste_df(bid)
-        if not b_df.empty:
-            period_df = b_df[(b_df["ts"] >= period_start) & (b_df["ts"] <= max_ts)]
-            prev_df = b_df[(b_df["ts"] >= prev_period_start) & (b_df["ts"] < period_start)]
+    audit_con = get_connection()
+    try:
+        for bid, binfo in BUILDINGS.items():
+            b_df = _get_daily_waste_df(bid)
+            if not b_df.empty:
+                period_df = b_df[(b_df["ts"] >= period_start) & (b_df["ts"] <= max_ts)]
+                prev_df = b_df[(b_df["ts"] >= prev_period_start) & (b_df["ts"] < period_start)]
 
-            kg_period = round(float(period_df["add_kg"].sum()), 1)
-            kg_prev = float(prev_df["add_kg"].sum())
-            wow = round(((kg_period - kg_prev) / kg_prev) * 100, 1) if kg_prev > 0 else 0.0
+                kg_period = round(float(period_df["add_kg"].sum()), 1)
+                kg_prev = float(prev_df["add_kg"].sum())
+                wow = round(((kg_period - kg_prev) / kg_prev) * 100, 1) if kg_prev > 0 else 0.0
 
-            rec_kg = float(period_df[period_df["category"].isin(["dry", "paper", "plastic"])]["add_kg"].sum())
-            recycling_pct = round((rec_kg / kg_period) * 100, 1) if kg_period > 0 else 32.0
-        else:
-            kg_period = round(binfo["population"] * KG_PER_PERSON_PER_DAY * PUBLIC_BIN_SHARE * days, 1)
-            wow = -2.0
-            recycling_pct = 35.0
+                rec_kg = float(period_df[period_df["category"].isin(["dry", "paper", "plastic"])]["add_kg"].sum())
+                recycling_pct = round((rec_kg / kg_period) * 100, 1) if kg_period > 0 else 0.0
+            else:
+                kg_period = round(binfo["population"] * KG_PER_PERSON_PER_DAY * PUBLIC_BIN_SHARE * days, 1)
+                wow = 0.0
+                recycling_pct = 0.0
 
-        kg_per_person_day = round(kg_period / (binfo["population"] * days), 3)
-        seg_pct = 82.0 if binfo["kind"] == "mess" else 76.0
+            kg_per_person_day = round(kg_period / (binfo["population"] * days), 3)
+            audit_sql = "SELECT AVG(correct_pct) FROM segregation_audits WHERE building_id = ?"
+            audit_value = audit_con.execute(audit_sql, (bid,)).fetchone()[0]
+            seg_pct = round(float(audit_value), 1) if audit_value is not None else 0.0
 
-        comps.append(
+            comps.append(
             {
                 "building_id": bid,
                 "name": binfo["name"],
@@ -319,7 +326,9 @@ def compare(days: int = 7) -> CompareResponse:
                 "segregation_pct": seg_pct,
                 "recycling_pct": recycling_pct,
             }
-        )
+            )
+    finally:
+        audit_con.close()
 
     # Sort by kg_per_person_day ascending: rank 1 = lowest (best)
     sorted_comps = sorted(comps, key=lambda c: c["kg_per_person_day"])

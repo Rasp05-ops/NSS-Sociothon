@@ -12,6 +12,7 @@ from shared.constants import (
     MAX_STOPS_PER_ROUTE,
     TRUCK_SHIFT_MIN,
     WASTE_DENSITY_KG_PER_L,
+    TRUCK_CAPACITY_KG,
 )
 from shared.schemas import Bin, Route, RoutePlanRequest, RoutePlanResponse, RouteStop
 
@@ -96,7 +97,7 @@ def plan_routes_ortools(flagged_bins: List[Bin], all_bins: List[Bin], req: Route
             routes=[],
             total_km=0.0,
             baseline_km=baseline_km,
-            km_saved_pct=100.0,
+            km_saved_pct=0.0,
             flagged_bin_count=0,
             total_bin_count=total_bin_count,
             source="real",
@@ -150,6 +151,23 @@ def plan_routes_ortools(flagged_bins: List[Bin], all_bins: List[Bin], req: Route
 
     transit_callback_index = routing.RegisterTransitCallback(time_callback)
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+    demands = [0] + [
+        max(0, round(b.fill_pct / 100.0 * b.capacity_l * WASTE_DENSITY_KG_PER_L))
+        for b in flagged_bins
+    ]
+
+    def demand_callback(from_index):
+        return demands[manager.IndexToNode(from_index)]
+
+    demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
+    routing.AddDimensionWithVehicleCapacity(
+        demand_callback_index,
+        0,
+        [TRUCK_CAPACITY_KG] * num_trucks,
+        True,
+        "Capacity",
+    )
 
     # Add Shift Time dimension (max 240 min)
     time_dimension_name = "Time"
@@ -216,14 +234,24 @@ def plan_routes_ortools(flagged_bins: List[Bin], all_bins: List[Bin], req: Route
     # If OR-Tools didn't partition all or failed to find a valid solution, fallback gracefully
     assigned_bins = {s.bin_id for r in routes for s in r.stops}
     if len(assigned_bins) < len(flagged_bins):
-        # Fallback: geographically split remaining/all flagged bins
+        # Fallback: split by vehicle payload capacity instead of silently
+        # returning routes that violate the same constraint as the solver.
         routes = []
         sorted_flagged = sorted(flagged_bins, key=lambda b: (b.lat, b.lon))
-        chunk_size = math.ceil(len(sorted_flagged) / num_trucks)
-        for i in range(num_trucks):
-            chunk = sorted_flagged[i * chunk_size : (i + 1) * chunk_size]
-            if chunk:
-                routes.append(heuristic_fallback_route(chunk, f"T{i+1}", f"R-{uuid.uuid4().hex[:6].upper()}"))
+        chunks: list[list[Bin]] = []
+        chunk: list[Bin] = []
+        payload = 0
+        for bin_item in sorted_flagged:
+            demand = max(0, round(bin_item.fill_pct / 100.0 * bin_item.capacity_l * WASTE_DENSITY_KG_PER_L))
+            if chunk and payload + demand > TRUCK_CAPACITY_KG:
+                chunks.append(chunk)
+                chunk, payload = [], 0
+            chunk.append(bin_item)
+            payload += demand
+        if chunk:
+            chunks.append(chunk)
+        for i, chunk in enumerate(chunks):
+            routes.append(heuristic_fallback_route(chunk, f"T{(i % num_trucks) + 1}", f"R-{uuid.uuid4().hex[:6].upper()}"))
 
     total_km = round(sum(r.km for r in routes), 2)
     km_saved = round(max(0.0, (1.0 - total_km / baseline_km) * 100), 1)

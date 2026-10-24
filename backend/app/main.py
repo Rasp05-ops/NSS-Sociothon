@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from dotenv import load_dotenv
 
 from shared.constants import WorkOrderStatus
 from shared.schemas import (Bin, ChatRequest, ChatResumeRequest, CompareResponse, TrendResponse, Decision, ForecastResponse, KPIs, RagAnswer, Reading,
@@ -17,8 +18,10 @@ from shared.schemas import (Bin, ChatRequest, ChatResumeRequest, CompareResponse
 from . import real
 from . import db
 
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
 FIX = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
-USE_MOCKS = os.getenv("USE_MOCKS", "true").lower() == "true"
+USE_MOCKS = os.getenv("USE_MOCKS", "false").lower() == "true"
 REAL = {s.strip() for s in os.getenv("REAL_ENDPOINTS", "").split(",") if s.strip()}
 
 app = FastAPI(title="Binlytics API", version="0.1.0")
@@ -144,15 +147,15 @@ async def _stream_chat_sse(message: str, thread_id: str = "default", resume: dic
                 done_emitted = True
             yield f"data: {event.model_dump_json()}\n\n"
             await asyncio.sleep(0.02)
-    except Exception:
-        # Fallback to fixtures replay if LangGraph startup or execution fails
-        for e in fx("trace_events.json"):
-            e["ts"] = datetime.now(timezone.utc).isoformat()
-            ev = TraceEvent(**e)
-            if ev.type == "done":
-                done_emitted = True
-            yield f"data: {ev.model_dump_json()}\n\n"
-            await asyncio.sleep(0.05)
+    except Exception as exc:
+        error_ev = TraceEvent(
+            trace_id=f"T-{uuid.uuid4().hex[:6].upper()}",
+            ts=datetime.now(timezone.utc),
+            agent="system",
+            type="error",
+            payload={"message": str(exc)},
+        )
+        yield f"data: {error_ev.model_dump_json()}\n\n"
 
     # Ensure the terminal 'done' event is always sent
     if not done_emitted:

@@ -9,9 +9,15 @@ import kpisFixture from '../../../shared/fixtures/kpis.json'
 import ragAnswerFixture from '../../../shared/fixtures/rag_answer.json'
 import readingsSampleFixture from '../../../shared/fixtures/readings_sample.json'
 import routePlanFixture from '../../../shared/fixtures/route_plan.json'
-import traceEventsFixture from '../../../shared/fixtures/trace_events.json'
 import trendsFixture from '../../../shared/fixtures/trends.json'
 import workOrderFixture from '../../../shared/fixtures/work_order.json'
+
+const ALLOW_MOCK_FALLBACK = import.meta.env.VITE_ALLOW_MOCK_FALLBACK === 'true'
+
+function offlineFallback<T>(value: T, operation: string): T {
+  if (ALLOW_MOCK_FALLBACK) return value
+  throw new Error(`${operation} failed. Check that the backend is running.`)
+}
 
 export type Bin = components['schemas']['Bin']
 export type Reading = components['schemas']['Reading']
@@ -120,7 +126,7 @@ export const apiClient = {
     if (buildingId) {
       filtered = filtered.filter((b) => b.building_id === buildingId)
     }
-    return { data: filtered, source: 'mock' }
+    return offlineFallback({ data: filtered, source: 'mock' }, 'Loading bins')
   },
 
   async getBinReadings(binId: string): Promise<{ data: Reading[]; source: 'mock' | 'real' }> {
@@ -138,7 +144,7 @@ export const apiClient = {
 
     const readings = (readingsSampleFixture as unknown as Reading[]).filter((r) => r.bin_id === binId)
     if (readings.length > 0) {
-      return { data: readings, source: 'mock' }
+      return offlineFallback({ data: readings, source: 'mock' }, 'Loading readings')
     }
 
     // Generate realistic 24-hr sparkline points if specific bin not in sample fixture
@@ -156,7 +162,7 @@ export const apiClient = {
         weight_kg: Math.round(currentPct * 0.288 * 10) / 10,
       })
     }
-    return { data: fallbackReadings, source: 'mock' }
+    return offlineFallback({ data: fallbackReadings, source: 'mock' }, 'Loading readings')
   },
 
   async getForecast(buildingId: string = 'H01', days: number = 7): Promise<ForecastResponse> {
@@ -171,11 +177,11 @@ export const apiClient = {
       // Fallback
     }
     const fc = forecastFixture as unknown as ForecastResponse
-    return {
+    return offlineFallback({
       ...fc,
       building_id: buildingId,
       source: 'mock',
-    }
+    }, 'Loading forecast')
   },
 
   async planRoutes(req: RoutePlanRequest = { horizon_h: 12, trucks: 2, risk_threshold: 0.7 }): Promise<RoutePlanResponse> {
@@ -192,7 +198,7 @@ export const apiClient = {
     } catch {
       // Fallback
     }
-    return routePlanFixture as unknown as RoutePlanResponse
+    return offlineFallback(routePlanFixture as unknown as RoutePlanResponse, 'Planning routes')
   },
 
   async getWorkOrders(status?: string): Promise<{ data: WorkOrder[]; source: 'mock' | 'real' }> {
@@ -207,7 +213,7 @@ export const apiClient = {
       // Fallback
     }
     const filtered = status ? localWorkOrders.filter((w) => w.status === status) : localWorkOrders
-    return { data: [...filtered], source: 'mock' }
+    return offlineFallback({ data: [...filtered], source: 'mock' }, 'Loading work orders')
   },
 
   async createWorkOrder(data: WorkOrderCreate): Promise<WorkOrder> {
@@ -232,7 +238,7 @@ export const apiClient = {
       route: data.route,
     }
     localWorkOrders.unshift(newWo)
-    return newWo
+    return offlineFallback(newWo, 'Creating work order')
   },
 
   async decideWorkOrder(id: string, decision: Decision): Promise<WorkOrder> {
@@ -257,7 +263,7 @@ export const apiClient = {
             decided_by: decision.decided_by,
             notes: decision.comment ?? localWorkOrders[idx].notes,
           }
-          return localWorkOrders[idx]
+          return offlineFallback(localWorkOrders[idx], 'Updating work order')
         }
       }
       throw new Error('Unable to update work order. Check that the backend is running.')
@@ -275,11 +281,11 @@ export const apiClient = {
       // Fallback
     }
     const kpi = kpisFixture as unknown as KPIs
-    return {
+    return offlineFallback({
       ...kpi,
       building_id: buildingId ?? null,
       source: 'mock',
-    }
+    }, 'Loading KPIs')
   },
 
   async getTrends(buildingId?: string, granularity: 'day' | 'week' = 'day', days: number = 30): Promise<TrendResponse> {
@@ -295,7 +301,7 @@ export const apiClient = {
     } catch {
       // Fallback
     }
-    return trendsFixture as unknown as TrendResponse
+    return offlineFallback(trendsFixture as unknown as TrendResponse, 'Loading trends')
   },
 
   async getCompare(days: number = 7): Promise<CompareResponse> {
@@ -307,7 +313,7 @@ export const apiClient = {
     } catch {
       // Fallback
     }
-    return compareFixture as unknown as CompareResponse
+    return offlineFallback(compareFixture as unknown as CompareResponse, 'Loading comparison')
   },
 
   async askRag(question: string): Promise<RagAnswer> {
@@ -374,7 +380,7 @@ export const apiClient = {
       }
     }
 
-    return ragAnswerFixture as unknown as RagAnswer
+    return offlineFallback(ragAnswerFixture as unknown as RagAnswer, 'Loading rules answer')
   },
 
   async streamChat(
@@ -426,24 +432,8 @@ export const apiClient = {
       }
       onDone()
       return
-    } catch {
-      // Replay mock trace events realistically with progressive delays
-      const events = traceEventsFixture as unknown as TraceEvent[]
-      let idx = 0
-      const timer = setInterval(() => {
-        if (idx < events.length) {
-          const ev = { ...events[idx], ts: new Date().toISOString() }
-          onEvent(ev)
-          if (ev.type === 'done') {
-            clearInterval(timer)
-            onDone()
-          }
-          idx++
-        } else {
-          clearInterval(timer)
-          onDone()
-        }
-      }, 750)
+    } catch (error) {
+      onError(error)
     }
   },
 

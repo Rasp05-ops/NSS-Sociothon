@@ -6,7 +6,9 @@ import json
 import os
 import time
 from pathlib import Path
+from dotenv import load_dotenv
 
+load_dotenv()
 CACHE = Path(os.getenv("LLM_CACHE", ".cache/llm.json"))
 _cache = json.loads(CACHE.read_text()) if CACHE.exists() else {}
 

@@ -79,7 +79,11 @@ def _chunk(text: str, doc_id: str, title: str, mode: str) -> list[_Chunk]:
         if len(words) < 8:
             continue
         heading = section.strip().splitlines()[0][:160]
-        clause = heading if re.search(r"(?i)(rule|section|chapter|clause)\s+[\w.-]+", heading) else None
+        clause_match = re.search(
+            r"(?i)\b(rule|section|chapter|clause)\s+(?:no\.?\s*)?[\w().-]+(?:\s*[-:]\s*[^.]{0,100})?",
+            heading,
+        )
+        clause = clause_match.group(0).strip() if clause_match else None
         for start in range(0, len(words), 380):
             part = " ".join(words[start:start + 500])
             if len(part.split()) >= 8:
@@ -189,6 +193,9 @@ def answer(question: str) -> RagAnswer:
     try:
         generated = ask(prompt, system="You answer campus waste rules using only cited context.")
     except (KeyError, RuntimeError):
-        generated = citations[0].snippet
+        generated = (
+            "A language model is not configured, so I cannot safely synthesize an answer. "
+            "Review the cited source passages directly or configure GEMINI_API_KEY."
+        )
     words = generated.split()
     return RagAnswer(question=question, answer=" ".join(words[:120]), citations=citations)

@@ -9,4 +9,6 @@ pyyaml
 mcp<2
 langgraph
 google-genai
+python-dotenv
+pypdf
 pytest

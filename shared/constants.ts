@@ -7,6 +7,7 @@ export type AgentName = "planner" | "critic" | "dispatcher" | "rag" | "system";
 export const RISK_THRESHOLD = 0.7;
 export const DEFAULT_HORIZON_H = 12;
 export const DEFAULT_TRUCKS = 2;
+export const TRUCK_CAPACITY_KG = 120;
 export const TZ_DISPLAY = "Asia/Kolkata"; // API is UTC; convert only for display
 
 export const BUILDING_IDS = ["H01", "H02", "H03", "ACAD01", "MESS01", "LIB01"] as const;
