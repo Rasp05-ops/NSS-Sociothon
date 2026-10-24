@@ -1,657 +1,679 @@
-# Binlytics — Smarter data. Cleaner tomorrow.
+# Binlytics
 
-## 1. One-line pitch
+## Smarter data. Cleaner tomorrow.
 
-Binlytics is an agentic campus waste-operations platform that predicts which bins
-will overflow, plans efficient collection routes, explains waste regulations with
-citations, and keeps a human supervisor in control before dispatch.
+## Judge-facing pitch guide
 
-## 2. The problem
+This document is written to be spoken to non-technical judges. It explains
+what Binlytics does, why it matters, and what to show in the product. Avoid
+leading with algorithms, APIs, databases, or model names. Lead with the
+campus problem and the decision Binlytics helps a supervisor make.
 
-Campus waste collection is often handled with fixed schedules:
+---
 
-- Every bin is visited whether it needs service or not.
-- High-use mess and hostel bins can overflow between scheduled collections.
-- Operations teams lack a single view of fill levels, risk, forecasts, routes, and
-  compliance rules.
-- Route decisions are difficult to audit because the reasoning is scattered
-  across spreadsheets, calls, and messaging.
-- A fully autonomous system is risky because dispatch affects people, vehicles,
-  and campus operations.
+## 1. The 30-second opening
 
-The result is a combination of overflowing bins, unnecessary vehicle kilometres,
-poor visibility, and reactive decision-making.
+> Every campus has the same waste problem: some bins overflow before the next
+> collection, while collection vehicles still spend time visiting bins that
+> are almost empty.
+>
+> Binlytics turns waste collection from a fixed timetable into a smart,
+> priority-based service. It predicts where waste will build up, identifies
+> which bins need attention, plans a practical route, explains why that route
+> was chosen, and keeps a human supervisor in control before anything is
+> dispatched.
+>
+> The result is a cleaner campus, fewer unnecessary trips, and better use of
+> the people and vehicles already available.
 
-## 3. Our solution
+### The memorable one-line version
 
-Binlytics creates one operational loop:
+> **Binlytics helps a campus collect the right waste, at the right place, at the
+> right time, with a human always in control.**
 
-1. Read current and historical bin telemetry.
-2. Forecast waste generation by building.
-3. Estimate the probability that each bin will overflow in the next horizon.
-4. Flag only the bins that need attention.
-5. Build capacity- and time-constrained collection routes.
-6. Let a critic agent check the plan.
-7. Ask a human supervisor for approval.
-8. Create approved work orders and update operational KPIs.
-9. Answer regulations questions using retrieved source documents and citations.
+---
 
-The important design principle is **human-in-the-loop automation**:
-Binlytics recommends and explains; a supervisor authorizes dispatch.
+## 2. The problem in simple terms
 
-## 4. What is implemented
+Most waste collection is scheduled by habit:
 
-### 4.1 Synthetic campus data
+- A vehicle follows the same route every day.
+- Empty bins receive the same attention as full bins.
+- Busy hostels, messes, and event areas can overflow between visits.
+- Supervisors have to make decisions using scattered readings, calls, and
+  spreadsheets.
+- A route may look efficient on a map but still be too long for a shift or
+  too heavy for a vehicle.
+- Rules and compliance questions take time to find and verify.
 
-The prototype uses calibrated synthetic data so the complete workflow can be
-demonstrated without exposing real campus or student information.
+This creates two types of waste at the same time:
 
-Current dataset:
+1. **Waste left unmanaged:** overflowing bins, unpleasant surroundings, and
+   avoidable sanitation issues.
+2. **Resources wasted:** unnecessary vehicle kilometres, fuel, staff time, and
+   repeated visits to bins that do not need service.
 
-- 6 buildings.
-- 40 bins.
-- 30 days of hourly readings.
-- 28,800 telemetry rows.
-- Fill percentage and weight readings.
-- Building, weekday, hour-of-day, and event patterns.
-- A fixed daily collection route as the baseline.
+### The transition to emphasize
 
-The simulator models higher waste generation around hostel and mess activity and
-records baseline overflow bin-hours.
+> We are moving from **"visit every bin because the calendar says so"** to
+> **"prioritize the bins that are most likely to need service."**
 
-**How to explain it:**
+---
 
-> The data is synthetic but the data contract and processing pipeline are real.
-> The same APIs can receive sensor data when deployed with ESP32 and ultrasonic
-> or weight sensors.
+## 3. What Binlytics does: the complete story
 
-### 4.2 Risk map
+Binlytics follows one clear operational loop:
 
-The Risk Map displays all campus bins geographically.
+1. It sees current and historical waste levels.
+2. It forecasts how much waste each building is likely to generate.
+3. It predicts which bins are likely to overflow soon.
+4. It highlights the most urgent bins for the operations team.
+5. It creates a route that respects vehicle capacity and staff working time.
+6. A checking step challenges the plan before it is used.
+7. A human supervisor approves or rejects the plan.
+8. Approved work becomes a trackable collection task.
+9. The dashboard shows the resulting operational and environmental impact.
 
-Features:
+This is important: Binlytics is not presented as an unchecked robot. It is a
+decision-support system that makes a supervisor faster, better informed, and
+more consistent.
 
-- Leaflet-based campus map.
-- 40 bin markers.
-- Green, amber, and red risk levels.
-- Building filter.
-- Minimum-risk slider.
-- High-, medium-, and low-risk counts.
-- Depot marker.
-- Bin detail panel.
-- Fill percentage, category, current risk, and last reading.
-- Reading sparkline for the selected bin.
-- Route preview after approval or work-order review.
+---
 
-**Judge value:** The map turns raw telemetry into an immediately understandable
-operational view.
+## 4. Feature-by-feature explanation
+
+### 4.1 The campus operations dashboard
+
+**What it is:** A single screen for the health of the campus waste operation.
+
+**What it shows:**
+
+- Waste generated in the latest 24-hour period.
+- Segregation performance.
+- Recycling performance.
+- Change compared with the previous week.
+- Recent overflow activity.
+- Route efficiency.
+- Forecast quality.
+
+**Why judges should care:** A supervisor should not need five spreadsheets to
+understand whether the campus is under control. The dashboard turns many
+individual readings into a quick answer:
+
+> **What is happening today, where is attention needed, and are we improving?**
+
+**Say this while showing it:**
+
+> This is the operations control room. Instead of looking only at how much
+> waste was produced after the fact, the team can see the current situation,
+> the emerging risks, and the actions that should happen next.
+
+---
+
+### 4.2 The live risk map
+
+**What it is:** A campus map where every bin has a clear priority level.
+
+**What judges see:**
+
+- All monitored campus bins on one map.
+- Green, amber, and red risk indicators.
+- Building filters.
+- A risk filter to focus on urgent locations.
+- Details for a selected bin, including current fill level and recent history.
+
+**What the colours mean:**
+
+- **Green:** unlikely to overflow soon.
+- **Amber:** should be watched.
+- **Red:** likely to need collection within the planning window.
+
+**Why it matters:** The map makes the system understandable immediately. A
+supervisor can see the campus situation without reading a technical report.
+It also helps the team focus on service quality rather than treating every
+location as equally urgent.
+
+**Say this:**
+
+> The map changes the question from "Which bins exist?" to "Which bins need
+> attention first?"
+
+---
 
 ### 4.3 Waste forecasting
 
-The forecasting service estimates daily waste generation for each building.
+**What it is:** A view of how much waste each building is expected to produce.
 
-The model uses:
+**What it considers in everyday language:**
 
-- Previous-day waste.
-- Seven-day lag.
-- Day of week.
-- Weekend indicator.
-- Rolling seven-day average.
-- Time-based holdout evaluation.
-- LightGBM regression.
+- What the building produced recently.
+- Its normal weekly rhythm.
+- Weekdays versus weekends.
+- Typical recent activity.
+- The uncertainty around the estimate.
 
-The response includes:
+**What judges see:**
 
-- P50 expected waste.
-- Lower and upper uncertainty band.
-- WAPE for the model.
-- Seasonal-naive baseline WAPE.
+- An expected amount of waste.
+- A lower and upper range rather than false precision.
+- A comparison with a simple previous-pattern estimate.
 
-**How to explain it:**
+**Why it matters:** A forecast gives the team time to prepare. If a hostel,
+mess, or event area is likely to generate more waste tomorrow, the team can
+adjust collection planning before the problem appears.
 
-> The system does not only show a point prediction. It shows uncertainty and
-> compares the model against a simple seasonal baseline.
+**Say this:**
 
-Be accurate when presenting results:
+> We are not claiming that the future can be predicted perfectly. We show the
+> expected level and the uncertainty, so the supervisor can plan with
+> appropriate confidence.
 
-> On the current synthetic dataset, the model beats the baseline in most
-> buildings. Forecast quality varies by building, so we present WAPE honestly
-> instead of claiming perfect prediction.
+**Credibility note:** On the current synthetic dataset, the forecast performs
+better than the simple baseline in most buildings, but performance varies by
+building. This is why the product shows the comparison instead of claiming
+perfect prediction.
 
-### 4.4 Overflow-risk engine
+---
 
-The risk engine estimates:
+### 4.4 Overflow prediction
 
-> `P(bin reaches 100% within the next horizon)`.
+**What it is:** A warning system that estimates whether a bin will reach full
+capacity within the next planning window.
 
-It considers historical fill behavior by:
+**Why it is different from a simple fill-level display:**
 
-- Bin.
-- Hour of day.
-- Weekday.
-- Recent fill level.
-- Forward horizon.
+A bin that is 70% full may be safe in a quiet academic building but urgent in a
+busy mess before lunch. Binlytics looks at recent behaviour and context, not
+just one number at one moment.
 
-The result is a continuous risk score from 0 to 1 and a category:
+**What it enables:**
 
-- Low: below 0.4.
-- Medium: 0.4 to below 0.7.
-- High: 0.7 or above.
+- Early action before overflow.
+- Priority-based collection.
+- Fewer unnecessary visits.
+- Better attention to high-use locations.
 
-High-risk bins become route-planning candidates.
+**Say this:**
 
-**Why this matters:** The platform does not blindly collect every bin. It
-prioritizes intervention based on predicted need.
+> A full bin tells us there is already a problem. Binlytics tries to warn us
+> while there is still time to prevent that problem.
 
-### 4.5 Route optimization
+---
 
-The route planner uses OR-Tools to plan routes over flagged bins.
+### 4.5 Smart collection routes
 
-It considers:
+**What it is:** A route recommendation for the bins that actually need
+attention.
 
-- Depot location.
-- Haversine distance.
-- Number of trucks.
-- Truck payload capacity.
-- Maximum shift duration.
-- Travel speed.
-- Four-minute service time per stop.
-- Maximum stops per route.
-- Risk threshold.
+**What the route takes into account:**
 
-The API returns:
+- Which bins are high priority.
+- Where the depot is.
+- How many vehicles are available.
+- How much each vehicle can carry.
+- How long the shift can last.
+- How many stops a route can practically include.
 
-- Route IDs.
-- Truck assignments.
-- Ordered stops.
-- ETA per stop.
-- Route distance.
-- Estimated route duration.
-- Total route distance.
-- Fixed-route baseline distance.
-- Percentage distance saved.
+**Why this is impressive to a non-technical audience:** It is not merely a
+line drawn between map points. It is a practical collection plan that respects
+real operating limits.
 
-**How to explain it:**
+**What judges should notice:**
 
-> The optimizer is not simply connecting points on a map. It produces feasible
-> routes under operational constraints. If the optimizer cannot produce a
-> solution, the fallback still respects payload, time, and stop constraints.
+- The route has an order.
+- Each route has a vehicle assignment.
+- Stops have estimated arrival times.
+- Distance and duration are visible.
+- The plan can be compared with the fixed daily route.
 
-Avoid presenting the simulation's 29% saving as a guaranteed live result. Say:
+**Say this:**
 
-> The 29% result is from the 30-day synthetic impact simulation. Live savings
-> vary with the current risk threshold, flagged bins, truck count, and capacity.
+> The goal is not to send a vehicle everywhere. The goal is to send the right
+> vehicle to the right priority locations without creating an impossible shift.
 
-### 4.6 Multi-agent workflow
+---
 
-The LangGraph workflow contains four stages:
+### 4.6 The planner and the checking step
 
-#### Planner
+**What it is:** Two complementary decision roles inside the system.
 
-Calls the route-planning API and creates a route plan summary. When Gemini is
-configured, Gemini explains the plan using the tool result.
+**The planner:** Creates a proposed collection plan from the current risk
+  information.
 
-#### Critic
+**The checker:** Questions the plan before it reaches the supervisor. It looks
+  for problems such as:
 
-Checks:
+- A route taking too long.
+- Too many stops.
+- Too much payload for one vehicle.
+- No usable route being created.
 
-- Route shift duration.
-- Maximum stops.
-- Whether routes exist.
-- Whether the plan is operationally valid.
+If a plan fails a constraint, the system can try again with a safer plan.
 
-If the plan fails, the graph can replan up to the configured attempt limit.
+**Why it matters:** Good automation should not only produce an answer. It
+should also challenge its own answer before asking a person to trust it.
 
-#### Approval
+**Say this:**
 
-The graph pauses using a LangGraph interrupt and emits an approval request.
+> One part of Binlytics proposes the route, and another part tries to find
+> reasons the route should not be used. That gives the supervisor a safer,
+> more explainable recommendation.
 
-The approval request includes:
+---
 
-- Thread ID.
-- Route ID.
-- All route IDs.
-- Route plan.
-- Critic result.
+### 4.7 Human approval and the work-order inbox
 
-#### Dispatcher
+**What it is:** The safety and accountability layer.
 
-After approval:
+The system creates a proposed task, not an uncontrolled dispatch. A supervisor
+can:
 
-- Creates work orders.
-- Approves them using the supervisor decision.
-- Emits work-order IDs in the live trace.
-
-After rejection:
-
-- No work orders are dispatched.
-- The trace explicitly reports that no work orders were dispatched.
-
-### 4.7 Live agent chat and trace
-
-The chat interface uses Server-Sent Events.
-
-The UI displays:
-
-- Planner tool results.
-- Planner explanation.
-- Critic result.
-- Approval request.
-- Dispatcher output.
-- Completion event.
-- Error event when execution fails.
-
-Every stream terminates with a `done` event.
-
-The approval flow is real:
-
-1. The frontend receives the real thread ID.
-2. The user clicks Approve or Reject.
-3. The frontend calls `/chat/resume`.
-4. LangGraph resumes the paused thread.
-5. Dispatcher output appears only after the decision.
-
-This is not a fake approval button and does not approve a made-up work order.
-
-### 4.8 Human approval and work-order inbox
-
-The Approval Inbox provides operational control over persisted work orders.
-
-Features:
-
-- List work orders.
-- Filter by status.
-- View route ID.
-- View stop count and distance.
+- Review the route.
+- See the stops and distance.
 - Preview the route on the map.
-- Add an approval comment.
-- Approve or reject.
-- Persist status, decision maker, timestamp, notes, and route snapshot.
-- Return 404 for unknown work-order IDs.
+- Add a note.
+- Approve the work.
+- Reject the work.
 
-Agents and MCP tools create drafts only. A human approval is required before
-dispatch.
+After approval, the task becomes a real work order with a status, decision
+maker, timestamp, and route details.
 
-### 4.9 KPI dashboard
+If the supervisor rejects the plan, no collection work order is dispatched.
 
-The dashboard presents:
+**Why judges should care:** Waste operations affect staff, vehicles, public
+spaces, and campus schedules. Human approval makes the system responsible,
+auditable, and easier to adopt.
 
-- Waste generated in the latest rolling 24-hour period.
-- Source-segregation percentage from audit records.
-- Recycling percentage.
-- Week-over-week waste change.
-- Overflow incidents in the last seven days.
-- Route distance savings.
-- Forecast chart with uncertainty band.
-- Model WAPE versus baseline WAPE.
+**Say this:**
 
-Important metric definitions:
+> Binlytics does not remove the supervisor. It gives the supervisor a better
+> recommendation and a clear final decision.
 
-- `kg_today` is a rolling 24-hour metric based on the latest telemetry time.
-- `overflow_count_7d` counts transitions into overflow, not every saturated
-  hourly reading.
-- `segregation_pct` comes from the audit table.
-- `recycling_pct` is the dry, paper, and plastic weight share.
+---
 
-### 4.10 Trends and comparison
+### 4.8 Live chat with the operations assistant
 
-The trends view supports:
+**What it is:** A natural-language way to ask the system for an operational
+  action or explanation.
 
-- Campus-wide trends.
-- Building-specific trends.
-- Daily aggregation.
-- Weekly aggregation.
-- Waste-volume change over time.
+Example questions:
 
-The comparison view ranks six buildings by kilograms per person per day and
-shows:
+- "Which buildings need attention today?"
+- "Plan tonight's collection."
+- "Why was this route selected?"
+- "What is the forecast for the hostels?"
 
-- Waste in the selected period.
-- Waste per person per day.
-- Week-over-week change.
-- Segregation percentage.
-- Recycling percentage.
-- Rank.
+The assistant shows its progress rather than hiding it. The supervisor can see
+the plan being prepared, checked, sent for approval, and completed.
 
-### 4.11 Rules Assistant: agentic RAG
+**Why it matters:** A busy operations team should not need to learn a complex
+  software workflow for every question. Chat makes the data and actions
+  accessible through ordinary language while preserving the approval step.
 
-The Rules Assistant answers campus waste-regulation questions using retrieved
-documents.
+**Say this:**
 
-Pipeline:
+> The assistant is not just answering a question in a chat bubble. It can
+> coordinate the operational workflow, show what it is doing, and stop for
+> human approval before action.
 
-1. Load documents listed in the manifest.
-2. Extract Markdown and PDF text.
-3. Split content into clause- or heading-aware chunks.
-4. Run BM25 lexical retrieval.
-5. Run embedding retrieval with BGE embeddings when installed.
-6. Fuse rankings using reciprocal rank fusion.
-7. Return the top citations.
-8. Ask Gemini to synthesize an answer using only retrieved context.
-9. Abstain when evidence is weak.
+---
 
-Each answer can include:
+### 4.9 Rules and compliance assistant
 
-- Document ID.
-- Document title.
-- Clause or section.
-- Source snippet.
-- Retrieval score.
+**What it is:** A source-grounded assistant for waste-management questions.
 
-If Gemini is unavailable, Binlytics does not pretend that a generated answer
-exists. It reports that AI synthesis is unavailable and preserves the evidence
-state.
+Example question:
 
-### 4.12 Gemini integration
+> Can food waste from the mess be composted on campus, and what guidance
+> supports that decision?
 
-All agent LLM calls go through one module:
+The assistant searches the available rules and guidance, gives a concise
+answer, and points to the supporting source. If the question is outside the
+available evidence, it can say that it does not have enough information
+instead of inventing a confident answer.
 
-`agents/llm.py`
+**Why it matters:** Compliance work is not only about getting an answer. It is
+about being able to explain where the answer came from.
 
-It provides:
+**Say this:**
 
-- `.env` loading from the repository root.
-- API-key validation.
-- Model configuration.
-- Stable cache location.
-- Retry handling.
-- Empty-response detection.
-- Explicit configuration and request errors.
+> The assistant is designed to be useful without pretending to know
+> everything. It gives evidence when it can and abstains when the evidence is
+> insufficient.
 
-The currently verified model is:
+---
 
-```text
-gemini-2.5-flash
-```
+### 4.10 Impact and comparison view
 
-The API key was tested with a live request. The key itself is never committed,
-displayed, or returned by the health endpoint.
+**What it is:** A simple comparison between the traditional fixed schedule
+and the risk-triggered approach.
 
-### 4.13 MCP integration
+It answers:
 
-Binlytics exposes the same operational capabilities to MCP clients such as
-Claude Desktop.
+- How far did vehicles travel?
+- How many stops were made?
+- How much overflow exposure occurred?
+- Did forecasting improve planning confidence?
 
-Available tools:
+The purpose is not to display impressive numbers in isolation. The purpose is
+to show the difference between two operating approaches using the same
+simulated campus.
 
-- `get_bin_levels`
-- `forecast_waste`
-- `plan_routes`
-- `draft_work_order`
-- `building_kpis`
-- `ask_rules`
+---
 
-MCP calls the backend HTTP API and never accesses the database directly.
-Write operations create DRAFT work orders only.
+### 4.11 Extensibility for other assistants
 
-This makes Binlytics usable from:
+Binlytics can expose the same approved capabilities to other assistant
+interfaces, such as a campus helpdesk assistant or an external operations
+assistant.
 
-- The web dashboard.
-- The built-in agent chat.
-- MCP-compatible assistants.
+**Explain this without jargon:**
 
-## 5. Architecture explanation
+> We have designed the capabilities as reusable services. A future campus
+> assistant can use the same bin data, forecasting, route planning, work-order
+> and rules features instead of rebuilding them from scratch.
 
-```text
-Synthetic sensors / future IoT sensors
-                |
-                v
-        SQLite telemetry store
-                |
-                v
-       FastAPI backend contract
-       /bins /forecast /routes
-       /kpis /work-orders /chat
-                |
-       +--------+---------+
-       |                  |
-       v                  v
-  ML/risk/routing     LangGraph agents
-       |              Planner -> Critic
-       |                    -> Approval
-       |                    -> Dispatcher
-       v                  |
-  KPI and route data       v
-       |              SSE live trace
-       +--------+---------+
-                |
-                v
-         React TypeScript UI
-                |
-                +--> Human approval
-                |
-                +--> MCP clients
-```
+This means Binlytics can start as a dashboard and later become part of a
+larger campus operations platform.
 
-## 6. Three-minute demo script
+---
 
-### 0:00-0:20 — Problem
+## 5. The end-to-end demo story
 
-> Campuses commonly collect waste on fixed schedules. That creates two
-> problems: some bins overflow before the next visit, while collection teams
-> still spend time visiting bins that are mostly empty. Binlytics turns campus
-> telemetry into predictive, explainable collection decisions.
+Use this sequence instead of explaining screens independently.
 
-Show the Risk Map.
+### Step 1: Start with the problem
 
-### 0:20-0:45 — Risk map
+Show the dashboard and say:
 
-> This map shows all 40 campus bins. Green, amber, and red indicate predicted
-> overflow risk. I can filter by building or minimum risk and inspect any bin's
-> fill history.
+> A fixed schedule treats every bin equally. That is inefficient and still
+> allows high-use locations to overflow between visits.
 
-Click a high-risk bin and show its readings.
+### Step 2: Show the campus situation
 
-### 0:45-1:05 — Forecast and KPIs
+Open the risk map:
 
-> The dashboard combines current operations with a building-level waste
-> forecast. The line is the expected load and the shaded band represents
-> uncertainty. We also show segregation, recycling, overflow incidents, and
-> change versus the previous week.
+> Here, the campus is no longer just a list of bins. We can see which
+> locations are safe, which need watching, and which are likely to overflow
+> soon.
 
-Select a building and point out WAPE versus the baseline.
+Select a red bin and show its recent readings:
 
-### 1:05-1:35 — Agent planning
+> This gives the supervisor context before sending a vehicle.
 
-Ask chat:
+### Step 3: Show the forecast
 
-```text
-Plan tonight's collection for high-risk bins.
-```
+Open the forecast:
 
-Say:
+> The system also looks ahead. It estimates upcoming waste generation by
+> building and shows uncertainty, so the team can prepare rather than react.
 
-> The Planner requests a route plan from the backend. The Critic checks shift
-> time, stop count, and feasibility. The trace makes each step visible instead
-> of hiding the automation behind one unexplained answer.
+### Step 4: Ask for a collection plan
 
-### 1:35-1:55 — Human approval
+In chat, say:
 
-> The graph pauses before dispatch. This is intentional: the system can
-> recommend a route, but a supervisor must approve it.
+> Plan tonight's collection for the high-risk bins.
 
-Click Approve and show:
+Explain:
 
-- `/chat/resume` behavior through the trace.
-- Dispatcher output.
-- Work-order IDs.
+> The planner creates a route for the priority bins. The checking step verifies
+> that the route fits the vehicle, stop, and shift constraints.
 
-Optionally repeat with Reject:
+### Step 5: Show the human decision
 
-> On rejection, no work orders are dispatched.
+When the approval request appears:
 
-### 1:55-2:20 — Rules RAG
+> The system has made a recommendation, but it has not dispatched anything.
+> The supervisor can inspect the plan and approve or reject it.
 
-Ask:
+Click Approve:
 
-```text
-Can mess food waste be composted on campus?
-```
+> Only now does the recommendation become a work order.
+
+If showing rejection instead:
+
+> If the supervisor rejects it, no work order is created. This is deliberate:
+> efficiency must not come at the cost of accountability.
+
+### Step 6: Ask a rules question
+
+Open the rules assistant:
+
+> The same platform can answer a waste-management question using cited
+> guidance, so operations and compliance are connected in one place.
+
+### Step 7: Finish with impact
+
+Open the impact view:
+
+> In our 30-day synthetic replay, the risk-triggered approach reduced
+> unnecessary travel, reduced stops, and reduced the amount of time bins stayed
+> overloaded. These are measured comparisons in the prototype, not promises
+> about every future campus.
+
+---
+
+## 6. Impact metrics: what each number means
+
+Impact metrics turn a technical demonstration into an operational story. Each
+one answers a different judge question.
+
+| Metric | What it measures | Why it matters |
+|---|---|---|
+| Distance per day | Vehicle travel under each collection approach | Indicates potential fuel, time, emissions, and vehicle-wear savings |
+| Stops per day | How many collection visits are made | Shows how much unnecessary work is avoided |
+| Overflow bin-hours | How long bins remain at or above capacity | Indicates sanitation and service-level improvement |
+| Forecast WAPE | Forecast error; lower is better | Shows whether planning information is becoming more reliable |
+| Route feasibility | Whether the plan fits vehicle and shift limits | Proves that efficiency is practical, not achieved by an impossible route |
+
+### Current synthetic replay
+
+The following values come from the documented 30-day synthetic replay:
+
+- **Distance:** 2.62 km/day to 1.86 km/day, a 29% reduction.
+- **Stops:** 40/day to 17.2/day, 57% fewer stops.
+- **Overflow bin-hours:** 1,535 to 337, a 78% reduction.
+- **Forecast error:** WAPE improves from 0.327 for the seasonal baseline to
+  0.282 for the model.
+
+### How to present these numbers honestly
 
 Say:
 
-> This answer is grounded in retrieved policy and regulation passages. The
-> assistant shows document and clause citations. For questions outside its
-> indexed evidence, it abstains rather than hallucinating.
+> These results are from a controlled synthetic replay comparing a fixed
+> schedule with risk-triggered collection. They show the direction and
+> potential of the approach. A live pilot would measure actual fuel, labour,
+> sanitation outcomes, and cost before making a production claim.
 
-### 2:20-2:40 — MCP
+Do not say:
 
-> The same backend tools are available through MCP. An MCP client can inspect
-> bin levels, forecast waste, plan routes, create draft work orders, read KPIs,
-> and ask rules questions.
+- "This will always save 29%."
+- "Overflow is eliminated."
+- "The system guarantees a payback period."
+- "The model is perfect."
 
-### 2:40-3:00 — Impact and scale
+### Why the comparison is meaningful
 
-> In our 30-day synthetic simulation, risk-triggered routing reduced distance,
-> stops, and overflow bin-hours relative to the fixed daily baseline. These are
-> simulated results, not a claim about a live campus. The deployment path is
-> straightforward: connect sensor telemetry, calibrate building populations and
-> routes, and expand from six buildings to larger campuses.
+Raw numbers do not show improvement by themselves. The value comes from
+comparing two approaches on the same simulated campus:
 
-## 7. Impact metrics to present carefully
+- The **baseline** visits every bin on a fixed schedule.
+- The **risk-triggered approach** prioritizes bins likely to need service and
+  plans feasible routes.
 
-### What impact metrics do
+That makes the impact understandable and testable.
 
-Impact metrics convert the technical pipeline into operational and business
-outcomes. They answer the judge's most important question: **what improves when
-Binlytics is used instead of a fixed collection schedule?**
+---
 
-- **Distance per day / km saved:** measures vehicle travel. Lower distance can
-  reduce fuel use, driver time, emissions, and fleet wear. It compares the
-  fixed route over all bins with the risk-triggered route over flagged bins.
-- **Stops per day:** measures unnecessary collection visits. Fewer stops mean
-  less loading and unloading time and more capacity for urgent work.
-- **Overflow bin-hours:** measures exposure to bins remaining at or above 100%
-  fill. Lower bin-hours indicate better sanitation coverage; this is different
-  from counting unique overflow incidents.
-- **Forecast WAPE:** measures forecast error using
-  `sum(abs(actual - predicted)) / sum(actual)`. Lower WAPE is better. Comparing
-  LightGBM with seasonal-naive shows whether the model adds value over a simple
-  baseline.
-- **Route feasibility:** confirms that efficiency did not come from creating
-  impossible routes. Every proposed route must respect truck capacity, shift
-  duration, and stop-count constraints.
+## 7. Why this is more than a dashboard
 
-These metrics are not all the same kind of measurement. Distance, stops, and
-overflow are impact outcomes from the 30-day synthetic replay. WAPE is a model
-quality metric. Route feasibility is a safety/operational constraint. Together
-they show efficiency, service quality, prediction quality, and reliability.
+Many products can display a number. Binlytics connects the complete decision
+cycle:
 
-Current documented simulation:
+1. **Sense:** understand current levels.
+2. **Predict:** see what is likely to happen next.
+3. **Prioritize:** identify where action matters most.
+4. **Plan:** create a practical route.
+5. **Challenge:** check whether the plan is safe and feasible.
+6. **Approve:** keep a responsible person in control.
+7. **Act:** create a trackable work order.
+8. **Learn:** compare results and improve future decisions.
 
-| Metric | Fixed baseline | Risk-triggered simulation |
-|---|---:|---:|
-| Distance per day | 2.62 km | 1.86 km |
-| Stops per day | 40 | 17.2 |
-| Overflow bin-hours over 30 days | 1,535 | 337 |
-| Forecast WAPE | 0.327 seasonal-naive | 0.282 LightGBM |
+That closed loop is the main innovation to emphasize.
 
-Use this wording:
+---
 
-> In our synthetic 30-day replay, the risk-triggered strategy reduced route
-> kilometres by approximately 29%, reduced stops by approximately 57%, and
-> reduced overflow bin-hours by approximately 78%.
+## 8. Benefits for each stakeholder
 
-Immediately add:
+### Campus administrators
 
-> These are simulation results using calibrated synthetic data. Live savings
-> depend on telemetry quality, route density, truck capacity, and operating
-> policy.
+- A single view of waste performance.
+- Evidence for sustainability reporting.
+- Better visibility into service quality and resource use.
 
-## 8. Cost and scale story
+### Waste supervisors
 
-Prototype assumptions:
+- Earlier warnings.
+- Fewer manual decisions.
+- Explainable route recommendations.
+- Clear approval and audit history.
 
-- Low-cost fill or weight sensors.
-- Approximate sensor cost: INR 500–800 per bin.
-- SQLite for the prototype.
-- FastAPI backend.
-- React TypeScript frontend.
-- OR-Tools for optimization.
-- Gemini API for explanations and synthesis.
-- MCP for assistant interoperability.
+### Collection staff
 
-Scale path:
+- Better organized routes.
+- Fewer unnecessary stops.
+- More predictable shift planning.
 
-1. Connect real sensor ingestion.
-2. Add authentication and role-based approval.
-3. Replace SQLite with a managed database.
-4. Add route history and driver feedback.
-5. Calibrate risk thresholds by building.
-6. Add notifications after approved dispatch.
-7. Expand from one campus to multiple campuses.
+### Students and campus community
 
-## 9. Safety and trust points
+- Cleaner, less frequently overflowing shared spaces.
+- Better support for segregation and recycling.
+- A campus that uses resources responsibly.
 
-These are strong points to mention:
+### Sustainability teams
 
-- Synthetic data is explicitly labelled.
-- Human approval is required before dispatch.
-- Agents create drafts rather than silently executing writes.
-- Route plans are checked against constraints.
-- RAG answers include citations.
-- RAG abstains when evidence is weak.
-- API failures are surfaced instead of being disguised as successful demos.
-- Gemini API keys remain in `.env` and are not committed.
-- The system emits a visible execution trace.
+- Measurable baselines and improvement indicators.
+- A path from synthetic pilot data to real sensor data.
+- A foundation for future emissions and diversion reporting.
 
-## 10. Likely judge questions and answers
+---
 
-### Is the data real?
+## 9. What is real in this prototype and what comes next
 
-> The current demo data is synthetic and calibrated to campus-like patterns.
-> This protects privacy while exercising the complete pipeline. The APIs are
-> designed for the same schema with real sensor readings.
+### Demonstrated in the prototype
 
-### Why use AI instead of fixed thresholds?
+- A complete campus waste operations workflow.
+- Risk visualization for 40 bins across six buildings.
+- Forecast and overflow-priority views.
+- Constraint-aware route recommendations.
+- Planner, checking, and approval workflow.
+- Real human approval before work-order creation.
+- Live progress shown in chat.
+- Cited rules assistance.
+- Impact comparison against a fixed schedule.
 
-> Fixed thresholds only react to the current state. Forecasting and risk
-> estimation consider how quickly a bin is filling and whether it is likely to
-> overflow during the next collection horizon.
+### Deliberately labelled as next-step work
 
-### Why not let the agent dispatch automatically?
+- Connecting physical sensors on live bins.
+- Measuring actual fuel, labour, and emissions savings.
+- Validating forecast quality on each campus's own history.
+- Integrating with existing campus work-order or fleet systems.
+- Adding production notifications to collection crews.
+- Running a supervised pilot and recalibrating thresholds.
 
-> Dispatch is an operational write action. We deliberately keep a supervisor
-> approval gate so the system is explainable, auditable, and safe.
+This distinction strengthens the pitch. It shows that the team understands the
+difference between a working product demonstration and a production
+deployment.
 
-### How do you prevent hallucinations in rules answers?
+---
 
-> The RAG system retrieves source passages, attaches citations, restricts
-> synthesis to retrieved context, and abstains below a relevance threshold.
+## 10. Scale and rollout plan
 
-### What happens if Gemini is unavailable?
+### Phase 1: supervised pilot
 
-> The operational route workflow remains deterministic, while LLM-dependent
-> explanations report an explicit configuration or request error. The system
-> does not present a fabricated AI answer.
+- Select one campus zone.
+- Connect a limited number of bins.
+- Keep the existing fixed route as a safety fallback.
+- Compare predictions with actual overflow and collection records.
 
-### How is route quality measured?
+### Phase 2: operational adoption
 
-> We compare risk-triggered routing with a fixed route over all bins and enforce
-> truck payload, shift duration, stop count, and depot constraints.
+- Expand to hostels, messes, and high-traffic areas.
+- Connect supervisor approval to existing work orders.
+- Calibrate thresholds by building and time of day.
 
-### What is the business value?
+### Phase 3: campus-wide intelligence
 
-> Fewer unnecessary stops, earlier intervention on likely overflow, measurable
-> operational KPIs, auditable decisions, and a reusable control layer for campus
-> sustainability teams.
+- Add more buildings and vehicles.
+- Track fuel, labour, emissions, and waste diversion.
+- Provide sustainability reports and cross-campus comparisons.
 
-## 11. Claims to avoid
+The platform can begin small because the highest-value locations are usually
+the busiest messes, hostels, event spaces, and shared facilities.
 
-Do not claim:
+---
 
-- That the data is live if the demo is using synthetic telemetry.
-- That 29% savings are guaranteed in production.
-- That the forecast is accurate for every building.
-- That every regulation document is automatically current.
-- That Gemini is used when the key or model is unavailable.
-- That an approval dispatches work orders before the resume step.
-- That a citation proves more than the retrieved source passage actually says.
+## 11. Frequently asked judge questions
 
-## 12. Closing statement
+### "Is this just a map?"
 
-> Binlytics is not just a dashboard and not just a chatbot. It is an
-> explainable decision layer for campus waste operations: it predicts risk,
-> optimizes action, grounds regulatory answers in evidence, and keeps people in
-> control of real-world dispatch. The result is smarter data today and a
-> cleaner tomorrow.
+> No. The map is the easiest way to understand the situation. Behind it is a
+> complete loop: forecast, overflow risk, route recommendation, checking,
+> human approval, work order, and impact measurement.
+
+### "Will the system replace sanitation workers?"
+
+> No. It reduces avoidable travel and improves planning. People remain
+> responsible for collection, judgement, and final approval.
+
+### "What happens if the prediction is wrong?"
+
+> The system shows uncertainty, uses current readings, keeps the supervisor in
+> control, and applies route constraints. A live pilot would also compare
+> predictions with actual outcomes and recalibrate the system.
+
+### "Can it work without expensive smart bins?"
+
+> The prototype uses generated data so the workflow can be demonstrated safely.
+> In deployment, the same interface can receive fill or weight readings from
+> ultrasonic or weight sensors. A phased rollout can start with the most
+> important locations.
+
+### "Where did the impact numbers come from?"
+
+> They come from a documented 30-day synthetic replay comparing fixed daily
+> collection with risk-triggered, constraint-aware collection. They are
+> prototype evidence, not guaranteed production savings.
+
+### "What makes this intelligent?"
+
+> It does not only report what happened. It estimates what will happen next,
+> recommends an action, checks that action, explains it, and waits for a human
+> decision before dispatch.
+
+### "What happens when the AI does not know?"
+
+> The rules assistant is designed to cite available guidance and abstain when
+> the evidence is insufficient. That is safer than presenting an unsupported
+> answer with confidence.
+
+### "Why is human approval necessary?"
+
+> Because a route affects people, vehicles, and campus operations. Automation
+> should accelerate decisions without removing accountability.
+
+---
+
+## 12. Strong closing
+
+> Binlytics is not trying to make waste management complicated. It makes the
+> right decision visible at the right time.
+>
+> Instead of collecting everything on a fixed schedule and reacting after
+> overflow, a campus can anticipate demand, prioritize service, plan practical
+> routes, and keep people in control.
+>
+> That is the path to a cleaner campus with smarter use of every trip, every
+> worker, and every resource.
+
+**Binlytics: Smarter data. Cleaner tomorrow.**
