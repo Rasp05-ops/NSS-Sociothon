@@ -1,0 +1,1549 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Campus Waste Copilot API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bins": {
+      "get": {
+        "summary": "Get Bins",
+        "operationId": "get_bins_api_v1_bins_get",
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Building Id"
+            }
+          },
+          {
+            "name": "min_risk",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0.0,
+              "title": "Min Risk"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bin"
+                  },
+                  "title": "Response Get Bins Api V1 Bins Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bins/{bin_id}/readings": {
+      "get": {
+        "summary": "Get Readings",
+        "operationId": "get_readings_api_v1_bins__bin_id__readings_get",
+        "parameters": [
+          {
+            "name": "bin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Bin Id"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reading"
+                  },
+                  "title": "Response Get Readings Api V1 Bins  Bin Id  Readings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forecast": {
+      "get": {
+        "summary": "Get Forecast",
+        "operationId": "get_forecast_api_v1_forecast_get",
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Building Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/plan": {
+      "post": {
+        "summary": "Plan",
+        "operationId": "plan_api_v1_routes_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutePlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders": {
+      "post": {
+        "summary": "Create Work Order",
+        "operationId": "create_work_order_api_v1_work_orders_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Work Orders",
+        "operationId": "list_work_orders_api_v1_work_orders_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOrder"
+                  },
+                  "title": "Response List Work Orders Api V1 Work Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{wo_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_api_v1_work_orders__wo_id__approve_post",
+        "parameters": [
+          {
+            "name": "wo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Wo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision",
+                "default": {
+                  "approved": true,
+                  "decided_by": "admin"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work-orders/{wo_id}/reject": {
+      "post": {
+        "summary": "Reject",
+        "operationId": "reject_api_v1_work_orders__wo_id__reject_post",
+        "parameters": [
+          {
+            "name": "wo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Wo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision",
+                "default": {
+                  "approved": false,
+                  "decided_by": "admin"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/kpis": {
+      "get": {
+        "summary": "Get Kpis",
+        "operationId": "get_kpis_api_v1_kpis_get",
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Building Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KPIs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trends": {
+      "get": {
+        "summary": "Get Trends",
+        "operationId": "get_trends_api_v1_trends_get",
+        "parameters": [
+          {
+            "name": "building_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Building Id"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "day",
+              "title": "Granularity"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare": {
+      "get": {
+        "summary": "Get Compare",
+        "operationId": "get_compare_api_v1_compare_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rag/ask": {
+      "get": {
+        "summary": "Rag Ask",
+        "description": "B wires agents.rag.interface.answer here (import inside the function to keep backend importable without ML deps).",
+        "operationId": "rag_ask_api_v1_rag_ask_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RagAnswer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "summary": "Chat",
+        "description": "SSE stream of TraceEvent. MOCK replays fixtures; B replaces the generator with the LangGraph run\n(stream node updates -> TraceEvent). Approval: emit type=approval_request, UI calls /work-orders/{id}/approve.",
+        "operationId": "chat_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Bin": {
+        "properties": {
+          "bin_id": {
+            "type": "string",
+            "title": "Bin Id"
+          },
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "capacity_l": {
+            "type": "integer",
+            "title": "Capacity L"
+          },
+          "category": {
+            "$ref": "#/components/schemas/WasteCategory"
+          },
+          "fill_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fill Pct"
+          },
+          "risk_overflow": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Risk Overflow",
+            "description": "P(overflow within horizon)"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "last_reading_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Reading Ts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bin_id",
+          "building_id",
+          "lat",
+          "lon",
+          "capacity_l",
+          "category",
+          "fill_pct",
+          "risk_overflow",
+          "risk_level",
+          "last_reading_ts"
+        ],
+        "title": "Bin"
+      },
+      "BuildingComparison": {
+        "properties": {
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "kg_period": {
+            "type": "number",
+            "title": "Kg Period"
+          },
+          "kg_per_person_day": {
+            "type": "number",
+            "title": "Kg Per Person Day"
+          },
+          "wow_change_pct": {
+            "type": "number",
+            "title": "Wow Change Pct"
+          },
+          "segregation_pct": {
+            "type": "number",
+            "title": "Segregation Pct"
+          },
+          "recycling_pct": {
+            "type": "number",
+            "title": "Recycling Pct"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "building_id",
+          "name",
+          "kind",
+          "kg_period",
+          "kg_per_person_day",
+          "wow_change_pct",
+          "segregation_pct",
+          "recycling_pct",
+          "rank"
+        ],
+        "title": "BuildingComparison"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "thread_id": {
+            "type": "string",
+            "title": "Thread Id",
+            "default": "default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest"
+      },
+      "Citation": {
+        "properties": {
+          "doc_id": {
+            "type": "string",
+            "title": "Doc Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "clause": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clause"
+          },
+          "snippet": {
+            "type": "string",
+            "title": "Snippet"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "doc_id",
+          "title",
+          "snippet",
+          "score"
+        ],
+        "title": "Citation"
+      },
+      "CompareResponse": {
+        "properties": {
+          "period_days": {
+            "type": "integer",
+            "title": "Period Days",
+            "default": 7
+          },
+          "buildings": {
+            "items": {
+              "$ref": "#/components/schemas/BuildingComparison"
+            },
+            "type": "array",
+            "title": "Buildings"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "real"
+            ],
+            "title": "Source",
+            "default": "real"
+          }
+        },
+        "type": "object",
+        "required": [
+          "buildings"
+        ],
+        "title": "CompareResponse"
+      },
+      "Decision": {
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decided_by": {
+            "type": "string",
+            "title": "Decided By",
+            "default": "admin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "Decision"
+      },
+      "ForecastPoint": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "lower": {
+            "type": "number",
+            "title": "Lower"
+          },
+          "upper": {
+            "type": "number",
+            "title": "Upper"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "p50",
+          "lower",
+          "upper"
+        ],
+        "title": "ForecastPoint"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "unit": {
+            "type": "string",
+            "const": "kg",
+            "title": "Unit",
+            "default": "kg"
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "hour",
+              "day"
+            ],
+            "title": "Granularity",
+            "default": "day"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "wape": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wape"
+          },
+          "baseline_wape": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Wape"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "real"
+            ],
+            "title": "Source",
+            "default": "real"
+          }
+        },
+        "type": "object",
+        "required": [
+          "building_id",
+          "points"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KPIs": {
+        "properties": {
+          "building_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Id"
+          },
+          "kg_today": {
+            "type": "number",
+            "title": "Kg Today"
+          },
+          "segregation_pct": {
+            "type": "number",
+            "title": "Segregation Pct"
+          },
+          "overflow_count_7d": {
+            "type": "integer",
+            "title": "Overflow Count 7D"
+          },
+          "km_saved_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Km Saved Pct"
+          },
+          "recycling_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recycling Pct"
+          },
+          "waste_change_wow_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waste Change Wow Pct"
+          },
+          "kg_per_person_day": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kg Per Person Day"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "real"
+            ],
+            "title": "Source",
+            "default": "real"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kg_today",
+          "segregation_pct",
+          "overflow_count_7d"
+        ],
+        "title": "KPIs"
+      },
+      "RagAnswer": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "abstained": {
+            "type": "boolean",
+            "title": "Abstained",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "answer",
+          "citations"
+        ],
+        "title": "RagAnswer"
+      },
+      "Reading": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "bin_id": {
+            "type": "string",
+            "title": "Bin Id"
+          },
+          "fill_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fill Pct"
+          },
+          "weight_kg": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Weight Kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "bin_id",
+          "fill_pct",
+          "weight_kg"
+        ],
+        "title": "Reading"
+      },
+      "RiskLevel": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "RiskLevel"
+      },
+      "Route": {
+        "properties": {
+          "route_id": {
+            "type": "string",
+            "title": "Route Id"
+          },
+          "truck_id": {
+            "type": "string",
+            "title": "Truck Id"
+          },
+          "stops": {
+            "items": {
+              "$ref": "#/components/schemas/RouteStop"
+            },
+            "type": "array",
+            "title": "Stops"
+          },
+          "km": {
+            "type": "number",
+            "title": "Km"
+          },
+          "est_min": {
+            "type": "integer",
+            "title": "Est Min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "route_id",
+          "truck_id",
+          "stops",
+          "km",
+          "est_min"
+        ],
+        "title": "Route"
+      },
+      "RoutePlanRequest": {
+        "properties": {
+          "horizon_h": {
+            "type": "integer",
+            "title": "Horizon H",
+            "default": 12
+          },
+          "trucks": {
+            "type": "integer",
+            "title": "Trucks",
+            "default": 2
+          },
+          "risk_threshold": {
+            "type": "number",
+            "title": "Risk Threshold",
+            "default": 0.7
+          }
+        },
+        "type": "object",
+        "title": "RoutePlanRequest"
+      },
+      "RoutePlanResponse": {
+        "properties": {
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/Route"
+            },
+            "type": "array",
+            "title": "Routes"
+          },
+          "total_km": {
+            "type": "number",
+            "title": "Total Km"
+          },
+          "baseline_km": {
+            "type": "number",
+            "title": "Baseline Km"
+          },
+          "km_saved_pct": {
+            "type": "number",
+            "title": "Km Saved Pct"
+          },
+          "flagged_bin_count": {
+            "type": "integer",
+            "title": "Flagged Bin Count"
+          },
+          "total_bin_count": {
+            "type": "integer",
+            "title": "Total Bin Count"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "real"
+            ],
+            "title": "Source",
+            "default": "real"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routes",
+          "total_km",
+          "baseline_km",
+          "km_saved_pct",
+          "flagged_bin_count",
+          "total_bin_count"
+        ],
+        "title": "RoutePlanResponse"
+      },
+      "RouteStop": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "bin_id": {
+            "type": "string",
+            "title": "Bin Id"
+          },
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "eta_min": {
+            "type": "integer",
+            "title": "Eta Min"
+          },
+          "expected_fill_pct": {
+            "type": "number",
+            "title": "Expected Fill Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "bin_id",
+          "building_id",
+          "lat",
+          "lon",
+          "eta_min",
+          "expected_fill_pct"
+        ],
+        "title": "RouteStop"
+      },
+      "TrendPoint": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "kg": {
+            "type": "number",
+            "title": "Kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "kg"
+        ],
+        "title": "TrendPoint"
+      },
+      "TrendResponse": {
+        "properties": {
+          "building_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Id"
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week"
+            ],
+            "title": "Granularity",
+            "default": "day"
+          },
+          "unit": {
+            "type": "string",
+            "const": "kg",
+            "title": "Unit",
+            "default": "kg"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "real"
+            ],
+            "title": "Source",
+            "default": "real"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "TrendResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WasteCategory": {
+        "type": "string",
+        "enum": [
+          "wet",
+          "dry",
+          "paper",
+          "plastic",
+          "ewaste",
+          "hazardous"
+        ],
+        "title": "WasteCategory"
+      },
+      "WorkOrder": {
+        "properties": {
+          "work_order_id": {
+            "type": "string",
+            "title": "Work Order Id"
+          },
+          "route_id": {
+            "type": "string",
+            "title": "Route Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkOrderStatus"
+          },
+          "created_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created Ts"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Route"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_order_id",
+          "route_id",
+          "status",
+          "created_ts"
+        ],
+        "title": "WorkOrder"
+      },
+      "WorkOrderCreate": {
+        "properties": {
+          "route_id": {
+            "type": "string",
+            "title": "Route Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Route"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "route_id"
+        ],
+        "title": "WorkOrderCreate"
+      },
+      "WorkOrderStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "PENDING_APPROVAL",
+          "APPROVED",
+          "REJECTED",
+          "DISPATCHED",
+          "COMPLETED"
+        ],
+        "title": "WorkOrderStatus"
+      }
+    }
+  }
+}
