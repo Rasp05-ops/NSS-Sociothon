@@ -49,7 +49,13 @@ r = APIRouter(prefix="/api/v1")
 
 @r.get("/health")
 def health():
-    return {"ok": True, "use_mocks": USE_MOCKS, "real_endpoints": sorted(REAL)}
+    return {
+        "ok": True,
+        "use_mocks": USE_MOCKS,
+        "real_endpoints": sorted(REAL),
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+        "gemini_model": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+    }
 
 
 @r.get("/bins", response_model=list[Bin])

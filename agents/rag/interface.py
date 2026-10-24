@@ -20,7 +20,7 @@ except ImportError:
 
 from shared.schemas import Citation, RagAnswer
 
-from ..llm import ask
+from ..llm import ask, LLMConfigurationError
 
 ABSTAIN_THRESHOLD = 0.35
 ROOT = Path(__file__).parent
@@ -192,10 +192,12 @@ def answer(question: str) -> RagAnswer:
     prompt = f"{PROMPT.read_text(encoding='utf-8')}\n\nQuestion: {question}\nContext:\n{context}"
     try:
         generated = ask(prompt, system="You answer campus waste rules using only cited context.")
-    except (KeyError, RuntimeError):
-        generated = (
-            "A language model is not configured, so I cannot safely synthesize an answer. "
-            "Review the cited source passages directly or configure GEMINI_API_KEY."
+    except LLMConfigurationError as exc:
+        return RagAnswer(
+            question=question,
+            answer=f"AI answer unavailable: {exc}",
+            citations=citations,
+            abstained=True,
         )
     words = generated.split()
     return RagAnswer(question=question, answer=" ".join(words[:120]), citations=citations)

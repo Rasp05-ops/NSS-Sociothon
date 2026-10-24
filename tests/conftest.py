@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+os.environ.setdefault("BINLYTICS_DISABLE_LLM", "true")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def isolated_database(tmp_path_factory):

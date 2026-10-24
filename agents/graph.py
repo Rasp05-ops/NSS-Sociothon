@@ -15,7 +15,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt  # noqa: F401  (Command re-exported for callers)
 
 from shared.constants import MAX_STOPS_PER_ROUTE, TRUCK_SHIFT_MIN
-from .llm import ask
+from .llm import ask, LLMConfigurationError
 
 load_dotenv()
 BASE = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
@@ -47,7 +47,7 @@ def planner(s: State) -> State:
         f"{len(plan['routes'])} routes cover {plan['flagged_bin_count']} flagged bins. "
         f"Total distance is {plan['total_km']} km, saving {plan['km_saved_pct']}% versus the fixed route."
     )
-    if os.getenv("GEMINI_API_KEY"):
+    if os.getenv("GEMINI_API_KEY") and os.getenv("BINLYTICS_DISABLE_LLM", "").lower() != "true":
         prompt_path = Path(__file__).parent / "prompts" / "planner.md"
         prompt = (
             f"{prompt_path.read_text()}\n\n"
@@ -57,8 +57,8 @@ def planner(s: State) -> State:
             generated = ask(prompt, system="You are the Planner agent.")
             if generated.strip():
                 summary = generated.strip()
-        except RuntimeError:
-            pass
+        except LLMConfigurationError:
+            raise
     return {
         "plan": plan,
         "plan_summary": summary,
@@ -76,7 +76,7 @@ def critic(s: State) -> State:
     if not s["plan"]["routes"]:
         issues.append("no routes produced")
     critic_result = {"ok": not issues, "issues": issues}
-    if issues and os.getenv("GEMINI_API_KEY"):
+    if issues and os.getenv("GEMINI_API_KEY") and os.getenv("BINLYTICS_DISABLE_LLM", "").lower() != "true":
         prompt_path = Path(__file__).parent / "prompts" / "critic.md"
         prompt = (
             f"{prompt_path.read_text()}\n\n"
@@ -87,8 +87,8 @@ def critic(s: State) -> State:
             reasoning = ask(prompt, system="You are the Critic agent.")
             if reasoning.strip():
                 critic_result["reasoning"] = reasoning.strip()
-        except RuntimeError:
-            pass
+        except LLMConfigurationError:
+            raise
     return {"critic": critic_result}
 
 

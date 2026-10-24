@@ -10,7 +10,7 @@ from langgraph.types import Command
 from shared.schemas import TraceEvent
 
 from .graph import build_graph
-from .llm import ask
+from .llm import ask, LLMConfigurationError
 from .rag.interface import answer as answer_rules
 
 GRAPH = build_graph()
@@ -50,12 +50,8 @@ def _stream_conversation(message: str, trace_id: str) -> Iterator[TraceEvent]:
     prompt = f"{GENERAL_PROMPT}\n\nUser question: {message}"
     try:
         text = ask(prompt, system="You are a general conversational AI for Binlytics.")
-    except (KeyError, RuntimeError):
-        text = (
-            "I can help with campus bin risks, waste forecasts, collection routes, "
-            "KPIs, and documented waste rules. Configure GEMINI_API_KEY for general "
-            "conversational answers."
-        )
+    except LLMConfigurationError as exc:
+        text = f"AI answer unavailable: {exc}"
     yield _ev(trace_id, "system", "message", {"text": text.strip()})
 
 
