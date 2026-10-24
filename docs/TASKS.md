@@ -4,15 +4,15 @@
 Timeline: H0-1 contract+scaffold (all) · H1-4 build on mocks · H4-7 real endpoints + wiring · H7-9 end-to-end · H9-10.5 metrics+slides · H10.5-12 freeze, rehearse, record backup.
 
 ## Person A — Data, ML, API (backend/)
-- [ ] P0 `make seed` works; sanity-check overflow stats (baseline ~5% bin-hours at 100%, mostly MESS01/H01)
-- [ ] P0 real `bins()` : latest reading per bin + overflow risk
-- [ ] P0 forecast: LightGBM per building (daily kg), time-based holdout, WAPE vs seasonal-naive baseline
-- [ ] P0 overflow risk: P(bin >=100% within horizon) from fill rate + hour/weekday profile; flag >= RISK_THRESHOLD
-- [ ] P0 routing: OR-Tools VRP (capacity, TRUCK_SHIFT_MIN, depot) over flagged bins; baseline_km = fixed route over ALL bins
-- [ ] P0 KPIs: kg_today, segregation_pct (sim audits), overflow_count_7d, km_saved_pct
-- [ ] P0 /trends and /compare endpoints (real.trends, real.compare) + recycling_pct and waste_change_wow_pct in /kpis (A11-A13)
-- [ ] P1 persist work orders + agent_trace in SQLite; anomaly flag (residual z>3) shown in KPIs/bins
-- [ ] P1 30-day simulation: fixed schedule vs risk-triggered -> docs/metrics.md numbers (km, trips, overflow bin-hours)
+- [x] P0 `make seed` works; sanity-check overflow stats (baseline ~5% bin-hours at 100%, mostly MESS01/H01)
+- [x] P0 real `bins()` : latest reading per bin + overflow risk
+- [x] P0 forecast: LightGBM per building (daily kg), time-based holdout, WAPE vs seasonal-naive baseline
+- [x] P0 overflow risk: P(bin >=100% within horizon) from fill rate + hour/weekday profile; flag >= RISK_THRESHOLD
+- [x] P0 routing: OR-Tools VRP (capacity, TRUCK_SHIFT_MIN, depot) over flagged bins; baseline_km = fixed route over ALL bins
+- [x] P0 KPIs: kg_today, segregation_pct (sim audits), overflow_count_7d, km_saved_pct
+- [x] P0 /trends and /compare endpoints (real.trends, real.compare) + recycling_pct and waste_change_wow_pct in /kpis (A11-A13)
+- [x] P1 persist work orders + agent_trace in SQLite; anomaly flag (residual z>3) shown in KPIs/bins
+- [x] P1 30-day simulation: fixed schedule vs risk-triggered -> docs/metrics.md numbers (km, trips, overflow bin-hours)
 - [ ] P2 quantile band from LightGBM; help B with RAG eval
 
 ## Person B — Agents, RAG, MCP (agents/)
