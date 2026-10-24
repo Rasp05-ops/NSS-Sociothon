@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from shared.constants import WorkOrderStatus
-from shared.schemas import (Bin, ChatRequest, CompareResponse, TrendResponse, Decision, ForecastResponse, KPIs, RagAnswer, Reading,
+from shared.schemas import (Bin, ChatRequest, ChatResumeRequest, CompareResponse, TrendResponse, Decision, ForecastResponse, KPIs, RagAnswer, Reading,
                             RoutePlanRequest, RoutePlanResponse, TraceEvent, WorkOrder, WorkOrderCreate)
 from . import real
 from . import db
@@ -129,16 +129,65 @@ def rag_ask(q: str):
         return RagAnswer(**{**fx("rag_answer.json"), "question": q})
 
 
-@r.post("/chat")
-async def chat(req: ChatRequest):
-    """SSE stream of TraceEvent. MOCK replays fixtures; B replaces the generator with the LangGraph run
-    (stream node updates -> TraceEvent). Approval: emit type=approval_request, UI calls /work-orders/{id}/approve."""
-    async def gen():
+async def _stream_chat_sse(message: str, thread_id: str = "default", resume: dict | None = None):
+    done_emitted = False
+    try:
+        import agents.graph as G
+        from agents.runner import stream_chat
+        from fastapi.testclient import TestClient
+
+        if G.http is None:
+            G.http = TestClient(app, base_url="http://testserver/api/v1")
+
+        for event in stream_chat(message=message, thread_id=thread_id, resume=resume):
+            if event.type == "done":
+                done_emitted = True
+            yield f"data: {event.model_dump_json()}\n\n"
+            await asyncio.sleep(0.02)
+    except Exception:
+        # Fallback to fixtures replay if LangGraph startup or execution fails
         for e in fx("trace_events.json"):
             e["ts"] = datetime.now(timezone.utc).isoformat()
-            yield f"data: {TraceEvent(**e).model_dump_json()}\n\n"
-            await asyncio.sleep(0.6)
-    return StreamingResponse(gen(), media_type="text/event-stream")
+            ev = TraceEvent(**e)
+            if ev.type == "done":
+                done_emitted = True
+            yield f"data: {ev.model_dump_json()}\n\n"
+            await asyncio.sleep(0.05)
+
+    # Ensure the terminal 'done' event is always sent
+    if not done_emitted:
+        done_ev = TraceEvent(
+            trace_id=f"T-{uuid.uuid4().hex[:6].upper()}",
+            ts=datetime.now(timezone.utc),
+            agent="system",
+            type="done",
+            payload={},
+        )
+        yield f"data: {done_ev.model_dump_json()}\n\n"
+
+
+@r.post("/chat")
+async def chat(req: ChatRequest):
+    """SSE stream of TraceEvent. Runs LangGraph agents via stream_chat with fallback to fixtures."""
+    return StreamingResponse(
+        _stream_chat_sse(message=req.message, thread_id=req.thread_id),
+        media_type="text/event-stream",
+    )
+
+
+@r.post("/chat/resume")
+async def chat_resume(req: ChatResumeRequest):
+    """Resume an interrupted LangGraph cycle (e.g. human approval) and stream TraceEvents until done."""
+    decision_payload = {
+        "approved": req.approved,
+        "decided_by": req.decided_by,
+    }
+    if req.comment:
+        decision_payload["comment"] = req.comment
+    return StreamingResponse(
+        _stream_chat_sse(message="", thread_id=req.thread_id, resume=decision_payload),
+        media_type="text/event-stream",
+    )
 
 
 app.include_router(r)

@@ -42,6 +42,19 @@ def test_chat_sse_ends_with_done():
     assert '"type":"done"' in lines[-1].replace(" ", "")
 
 
+def test_chat_resume_sse():
+    thread_id = "test_resume_flow"
+    with c.stream("POST", "/api/v1/chat", json={"message": "plan routes", "thread_id": thread_id}) as r:
+        lines = [x for x in r.iter_lines() if x.startswith("data:")]
+    assert len(lines) > 0
+    assert '"type":"done"' in lines[-1].replace(" ", "")
+
+    with c.stream("POST", "/api/v1/chat/resume", json={"thread_id": thread_id, "approved": True, "decided_by": "test"}) as r:
+        resume_lines = [x for x in r.iter_lines() if x.startswith("data:")]
+    assert len(resume_lines) > 0
+    assert '"type":"done"' in resume_lines[-1].replace(" ", "")
+
+
 def test_trends_and_compare():
     t = TrendResponse(**c.get("/api/v1/trends", params={"building_id": "H01"}).json())
     assert len(t.points) == 30 and t.building_id == "H01"

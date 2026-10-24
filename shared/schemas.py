@@ -166,6 +166,13 @@ class ChatRequest(BaseModel):
     thread_id: str = "default"
 
 
+class ChatResumeRequest(BaseModel):
+    thread_id: str = "default"
+    approved: bool = True
+    decided_by: str = "admin"
+    comment: Optional[str] = None
+
+
 class TraceEvent(BaseModel):
     """One SSE `data:` line. The UI renders these as the live agent trace."""
     trace_id: str

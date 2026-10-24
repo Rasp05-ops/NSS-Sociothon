@@ -149,10 +149,17 @@ def run_checks():
     record("/api/v1/rag/ask?q=...", "GET", r.status_code, len(rag.answer) > 0, f"Citations count: {len(rag.citations)}, abstained={rag.abstained}")
 
     # 14. POST /chat (SSE streaming)
-    with client.stream("POST", "/chat", json={"message": "plan route for today"}) as sse_stream:
+    test_thread = "verify_thread_01"
+    with client.stream("POST", "/chat", json={"message": "plan route for today", "thread_id": test_thread}) as sse_stream:
         lines = [line for line in sse_stream.iter_lines() if line.startswith("data:")]
     last_event_is_done = len(lines) > 0 and '"type":"done"' in lines[-1].replace(" ", "")
     record("/api/v1/chat (SSE stream)", "POST", sse_stream.status_code, last_event_is_done, f"Streamed {len(lines)} events, terminal event is done")
+
+    # 15. POST /chat/resume (SSE streaming approval continuation)
+    with client.stream("POST", "/chat/resume", json={"thread_id": test_thread, "approved": True, "decided_by": "admin"}) as sse_resume:
+        resume_lines = [line for line in sse_resume.iter_lines() if line.startswith("data:")]
+    resume_done = len(resume_lines) > 0 and '"type":"done"' in resume_lines[-1].replace(" ", "")
+    record("/api/v1/chat/resume (SSE stream)", "POST", sse_resume.status_code, resume_done, f"Streamed {len(resume_lines)} events on resume, terminal event is done")
 
     # Overall Summary
     total = len(results)
