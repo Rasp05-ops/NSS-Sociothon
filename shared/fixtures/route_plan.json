@@ -1,0 +1,62 @@
+{
+  "routes": [
+    {
+      "route_id": "R-MOCK-1",
+      "truck_id": "T1",
+      "stops": [
+        {
+          "seq": 1,
+          "bin_id": "H03-05",
+          "building_id": "H03",
+          "lat": 29.863144,
+          "lon": 77.894942,
+          "eta_min": 6,
+          "expected_fill_pct": 100.0
+        },
+        {
+          "seq": 2,
+          "bin_id": "H01-07",
+          "building_id": "H01",
+          "lat": 29.86594,
+          "lon": 77.896261,
+          "eta_min": 11,
+          "expected_fill_pct": 96.7
+        }
+      ],
+      "km": 1.54,
+      "est_min": 19
+    },
+    {
+      "route_id": "R-MOCK-2",
+      "truck_id": "T2",
+      "stops": [
+        {
+          "seq": 1,
+          "bin_id": "H02-02",
+          "building_id": "H02",
+          "lat": 29.864602,
+          "lon": 77.898858,
+          "eta_min": 5,
+          "expected_fill_pct": 100.0
+        },
+        {
+          "seq": 2,
+          "bin_id": "MESS01-02",
+          "building_id": "MESS01",
+          "lat": 29.864631,
+          "lon": 77.896635,
+          "eta_min": 9,
+          "expected_fill_pct": 97.8
+        }
+      ],
+      "km": 1.15,
+      "est_min": 17
+    }
+  ],
+  "total_km": 2.69,
+  "baseline_km": 6.19,
+  "km_saved_pct": 56.5,
+  "flagged_bin_count": 4,
+  "total_bin_count": 40,
+  "source": "mock"
+}

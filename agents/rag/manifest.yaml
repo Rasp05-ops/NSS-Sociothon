@@ -1,0 +1,27 @@
+# OWNER: B. Corpus manifest. Put raw files in agents/rag/corpus/ (gitignored if large). Cite ONLY what is actually indexed.
+# Download the official texts yourselves and verify clause numbers against the real documents.
+docs:
+  - id: swm-rules-2016
+    title: Solid Waste Management Rules, 2016 (India)
+    file: corpus/swm_rules_2016.pdf
+    chunking: clause        # split on rule/clause headings; keep parent rule title in metadata
+  - id: pwm-rules
+    title: Plastic Waste Management Rules (India) with amendments
+    file: corpus/plastic_waste_rules.pdf
+    chunking: clause
+  - id: ewaste-rules
+    title: E-Waste (Management) Rules (India)
+    file: corpus/ewaste_rules.pdf
+    chunking: clause
+  - id: campus-sop
+    title: Campus Waste SOP (written by the team)
+    file: corpus/campus_sop.md
+    chunking: heading       # 1-2 pages: bins & colours, collection timings, composting, e-waste drop-off, contacts
+retrieval:
+  chunk_tokens: [300, 500]
+  top_k_dense: 20
+  top_k_bm25: 20
+  rrf_k: 60
+  final_k: 8
+  embedding_model: BAAI/bge-small-en-v1.5   # bge-m3 if CPU time allows
+  reranker: null                             # e.g. BAAI/bge-reranker-base, only if time remains
