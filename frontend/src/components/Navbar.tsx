@@ -108,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onSelectTab, onQuickP
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                Waste<span style={{ color: 'var(--accent-cyan)' }}>Copilot</span>
+                Bin<span style={{ color: 'var(--accent-cyan)' }}>lytics</span>
               </span>
               <span
                 style={{
@@ -125,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onSelectTab, onQuickP
               </span>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Agentic Campus Waste Orchestrator
+              Smarter data. Cleaner tomorrow.
             </p>
           </div>
         </div>
