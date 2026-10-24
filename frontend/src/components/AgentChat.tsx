@@ -110,12 +110,16 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
             text:
               pendingApproval != null
                 ? `Route ${pendingApproval.routeId} successfully generated and verified by Critic! It is ready for human supervisor sign-off.`
-                : text.toLowerCase().includes('compost')
-                ? 'Under the Solid Waste Management Rules (2016) Rule 4(1)(b), all institutional messes must compost biodegradable food waste on-site.'
-                : 'Execution trace completed. All constraints verified by Critic agent.',
-            ts: new Date().toISOString(),
-            traceEvents: [...collectedEvents],
-            workOrderPending: pendingApproval,
+                  : [...collectedEvents]
+                      .reverse()
+                      .find((event) => event.type === 'message' && typeof event.payload?.text === 'string')
+                      ?.payload.text ??
+                    (text.toLowerCase().includes('compost')
+                      ? 'The rules assistant could not provide a dynamic answer. Please check the cited rules response.'
+                      : 'Execution trace completed.'),
+              ts: new Date().toISOString(),
+              traceEvents: [...collectedEvents],
+              workOrderPending: pendingApproval,
           },
         ])
         setCurrentTraceEvents([])

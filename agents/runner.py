@@ -2,6 +2,7 @@
 Wire into backend/app/main.py `chat()` by replacing the fixture replay with `stream_chat(...)`."""
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Iterator
 
 from langgraph.types import Command
@@ -9,16 +10,61 @@ from langgraph.types import Command
 from shared.schemas import TraceEvent
 
 from .graph import build_graph
+from .llm import ask
+from .rag.interface import answer as answer_rules
 
 GRAPH = build_graph()
+GENERAL_PROMPT = (Path(__file__).parent / "prompts" / "general.md").read_text(encoding="utf-8")
+WORKFLOW_TERMS = {"route", "routes", "collection", "collect", "bin", "overflow", "truck", "dispatch", "plan tonight"}
+RULE_TERMS = {"rule", "rules", "sop", "segregat", "compost", "recycl", "plastic", "e-waste", "ewaste", "hazardous"}
 
 
 def _ev(trace_id, agent, type_, payload):
     return TraceEvent(trace_id=trace_id, ts=datetime.now(timezone.utc), agent=agent, type=type_, payload=payload)
 
 
+def _is_workflow_request(message: str) -> bool:
+    text = message.lower()
+    return any(term in text for term in WORKFLOW_TERMS)
+
+
+def _is_rules_request(message: str) -> bool:
+    text = message.lower()
+    return any(term in text for term in RULE_TERMS)
+
+
+def _stream_conversation(message: str, trace_id: str) -> Iterator[TraceEvent]:
+    if _is_rules_request(message):
+        result = answer_rules(message)
+        if result.abstained:
+            text = result.answer
+        else:
+            citations = ", ".join(
+                f"{citation.doc_id}{f' ({citation.clause})' if citation.clause else ''}"
+                for citation in result.citations[:3]
+            )
+            text = f"{result.answer}\n\nSources: {citations}"
+        yield _ev(trace_id, "rag", "message", {"text": text, "abstained": result.abstained})
+        return
+
+    prompt = f"{GENERAL_PROMPT}\n\nUser question: {message}"
+    try:
+        text = ask(prompt, system="You are a general conversational AI for WasteCopilot.")
+    except (KeyError, RuntimeError):
+        text = (
+            "I can help with campus bin risks, waste forecasts, collection routes, "
+            "KPIs, and documented waste rules. Configure GEMINI_API_KEY for general "
+            "conversational answers."
+        )
+    yield _ev(trace_id, "system", "message", {"text": text.strip()})
+
+
 def stream_chat(message: str, thread_id: str = "default", resume: dict | None = None) -> Iterator[TraceEvent]:
     tid, cfg = uuid.uuid4().hex[:8], {"configurable": {"thread_id": thread_id}}
+    if resume is None and not _is_workflow_request(message):
+        yield from _stream_conversation(message, tid)
+        yield _ev(tid, "system", "done", {})
+        return
     inp = Command(resume=resume) if resume is not None else {"request": message}
     for upd in GRAPH.stream(inp, cfg, stream_mode="updates"):
         for node, val in upd.items():
