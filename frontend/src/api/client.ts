@@ -246,25 +246,21 @@ export const apiClient = {
       if (res.ok) {
         return await res.json()
       }
+      throw new Error(`Work-order decision failed: HTTP ${res.status}`)
     } catch {
-      // Fallback mock update
-    }
-    const idx = localWorkOrders.findIndex((w) => w.work_order_id === id)
-    if (idx >= 0) {
-      localWorkOrders[idx] = {
-        ...localWorkOrders[idx],
-        status: decision.approved ? 'APPROVED' : 'REJECTED',
-        decided_by: decision.decided_by,
-        notes: decision.comment ?? localWorkOrders[idx].notes,
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const idx = localWorkOrders.findIndex((w) => w.work_order_id === id)
+        if (idx >= 0) {
+          localWorkOrders[idx] = {
+            ...localWorkOrders[idx],
+            status: decision.approved ? 'APPROVED' : 'REJECTED',
+            decided_by: decision.decided_by,
+            notes: decision.comment ?? localWorkOrders[idx].notes,
+          }
+          return localWorkOrders[idx]
+        }
       }
-      return localWorkOrders[idx]
-    }
-    return {
-      work_order_id: id,
-      route_id: 'R-LOCAL',
-      status: decision.approved ? 'APPROVED' : 'REJECTED',
-      created_ts: new Date().toISOString(),
-      decided_by: decision.decided_by,
+      throw new Error('Unable to update work order. Check that the backend is running.')
     }
   },
 
@@ -448,6 +444,55 @@ export const apiClient = {
           onDone()
         }
       }, 750)
+    }
+  },
+
+  async resumeChat(
+    threadId: string,
+    approved: boolean,
+    decidedBy: string,
+    onEvent: (event: TraceEvent) => void,
+    onError: (err: any) => void,
+    onDone: () => void,
+    comment?: string
+  ): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE}/chat/resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ thread_id: threadId, approved, decided_by: decidedBy, comment }),
+      })
+      if (!response.ok || !response.body) {
+        throw new Error(`Chat resume failed: HTTP ${response.status}`)
+      }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed || !trimmed.startsWith('data:')) continue
+          try {
+            const event = JSON.parse(trimmed.slice(5).trim()) as TraceEvent
+            onEvent(event)
+            if (event.type === 'done') {
+              onDone()
+              return
+            }
+          } catch (error) {
+            onError(error)
+            return
+          }
+        }
+      }
+      onDone()
+    } catch (error) {
+      onError(error)
     }
   },
 }

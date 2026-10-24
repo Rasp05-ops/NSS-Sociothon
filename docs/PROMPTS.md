@@ -1,7 +1,7 @@
 # Kickoff prompts (paste into Claude/Copilot, in order). Replace <A|B|C>. Always start a new AI session with the PREAMBLE.
 
 ## PREAMBLE (paste first, every new session)
-You are helping me, Person <A|B|C>, on the "Campus Waste Copilot" hackathon repo. Read CONTEXT.md, shared/schemas.py,
+You are helping me, Person <A|B|C>, on the "Binlytics" hackathon repo. Read CONTEXT.md, shared/schemas.py,
 shared/constants.py and docs/TASKS.md fully before writing code. I own only: <folders from the CONTEXT.md table>.
 Rules: do not invent fields/endpoints/enums; do not edit files outside my folders or /shared (tell me instead);
 keep it minimal and runnable; run `make test` after changes and fix failures; explain what you changed in 5 lines.
@@ -27,7 +27,7 @@ keep it minimal and runnable; run `make test` after changes and fix failures; ex
 1. "Scaffold Vite+React+TS in frontend/ per frontend/README.md. Run `make types` against the running backend and build a typed API client (no hand-written types). Show a `mock`/`real` source badge from API responses."
 2. "Build the Map page with react-leaflet: 40 bins as circle markers coloured by risk_level, depot marker, click opens a side panel with fill %, risk, category and a 24h sparkline from /bins/{id}/readings."
 3. "Build the Dashboard: KPI cards from /kpis and a Recharts forecast chart (p50 line + lower/upper area) with a building selector (BUILDING_IDS)."
-4. "Build Chat+Trace: POST /chat SSE via fetch streaming, render TraceEvent rows (agent badge, type, payload summary), and on approval_request show Approve/Reject buttons calling /work-orders/{id}/approve|reject. Handle `done` and errors."
+4. "Build Chat+Trace: POST /chat SSE via fetch streaming, render TraceEvent rows (agent badge, type, payload summary), and on approval_request store thread_id and show Approve/Reject buttons calling POST /chat/resume. Handle `done` and errors."
 5. "Build the Approval inbox: list GET /work-orders?status=DRAFT, preview the route polyline on the map, approve/reject with optimistic UI."
 6. "Build the Trends view (day/week toggle, campus or building) from /trends and the Comparison view (kg per person per day bar chart + table with wow change, segregation %, recycling %, rank) from /compare."
 7. "Build the Impact page using RoutePlanResponse (km_saved_pct, baseline vs ours) and the numbers in docs/metrics.md. Then draft the 3-minute demo script in docs/demo.md."

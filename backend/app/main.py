@@ -21,7 +21,7 @@ FIX = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
 USE_MOCKS = os.getenv("USE_MOCKS", "true").lower() == "true"
 REAL = {s.strip() for s in os.getenv("REAL_ENDPOINTS", "").split(",") if s.strip()}
 
-app = FastAPI(title="Campus Waste Copilot API", version="0.1.0")
+app = FastAPI(title="Binlytics API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 

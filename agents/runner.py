@@ -49,7 +49,7 @@ def _stream_conversation(message: str, trace_id: str) -> Iterator[TraceEvent]:
 
     prompt = f"{GENERAL_PROMPT}\n\nUser question: {message}"
     try:
-        text = ask(prompt, system="You are a general conversational AI for WasteCopilot.")
+        text = ask(prompt, system="You are a general conversational AI for Binlytics.")
     except (KeyError, RuntimeError):
         text = (
             "I can help with campus bin risks, waste forecasts, collection routes, "
@@ -69,7 +69,21 @@ def stream_chat(message: str, thread_id: str = "default", resume: dict | None = 
     for upd in GRAPH.stream(inp, cfg, stream_mode="updates"):
         for node, val in upd.items():
             if node == "__interrupt__":
-                yield _ev(tid, "dispatcher", "approval_request", {"interrupt": str(val[0].value)[:2000]})
+                interrupt_value = val[0].value
+                plan = interrupt_value.get("plan", {})
+                route_ids = [route["route_id"] for route in plan.get("routes", [])]
+                yield _ev(
+                    tid,
+                    "dispatcher",
+                    "approval_request",
+                    {
+                        "thread_id": thread_id,
+                        "route_id": route_ids[0] if route_ids else None,
+                        "route_ids": route_ids,
+                        "plan": plan,
+                        "critic": interrupt_value.get("critic", {}),
+                    },
+                )
             elif node == "planner":
                 p = val["plan"]
                 yield _ev(tid, "planner", "tool_result",
@@ -80,5 +94,18 @@ def stream_chat(message: str, thread_id: str = "default", resume: dict | None = 
                 critic = val["critic"]
                 yield _ev(tid, "critic", "message", critic)
             elif node == "dispatcher":
-                yield _ev(tid, "dispatcher", "tool_result", {"work_orders": [w["work_order_id"] for w in val["work_orders"]]})
+                work_orders = [w["work_order_id"] for w in val["work_orders"]]
+                yield _ev(
+                    tid,
+                    "dispatcher",
+                    "tool_result",
+                    {
+                        "work_orders": work_orders,
+                        "summary": (
+                            f"{len(work_orders)} work order(s) dispatched"
+                            if work_orders
+                            else "Approval rejected; no work orders dispatched"
+                        ),
+                    },
+                )
     yield _ev(tid, "system", "done", {})

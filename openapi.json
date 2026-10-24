@@ -630,7 +630,7 @@
     "/api/v1/chat": {
       "post": {
         "summary": "Chat",
-        "description": "SSE stream of TraceEvent. MOCK replays fixtures; B replaces the generator with the LangGraph run\n(stream node updates -> TraceEvent). Approval: emit type=approval_request, UI calls /work-orders/{id}/approve.",
+        "description": "SSE stream of TraceEvent. MOCK replays fixtures; B replaces the generator with the LangGraph run\n(stream node updates -> TraceEvent). Approval emits type=approval_request with thread_id; UI resumes via POST /chat/resume.",
         "operationId": "chat_api_v1_chat_post",
         "requestBody": {
           "content": {

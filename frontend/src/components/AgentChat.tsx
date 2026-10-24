@@ -15,7 +15,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react'
-import { apiClient, type Decision, type TraceEvent, type WorkOrder, formatTimeOnlyIST } from '../api/client'
+import { apiClient, type TraceEvent, formatTimeOnlyIST } from '../api/client'
 
 interface MessageItem {
   id: string
@@ -25,7 +25,7 @@ interface MessageItem {
   traceEvents?: TraceEvent[]
   workOrderPending?: {
     routeId: string
-    workOrderId: string
+    threadId: string
   }
 }
 
@@ -38,14 +38,14 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
     {
       id: 'welcome',
       sender: 'agent',
-      text: "Hello! I am the Campus Waste Orchestrator Copilot. I can forecast building loads, schedule OR-Tools collection routes for high-risk bins, and answer SWM regulatory questions. What would you like to run?",
+      text: "Hello! I am Binlytics. I can forecast building loads, schedule OR-Tools collection routes for high-risk bins, and answer SWM regulatory questions. What would you like to run?",
       ts: new Date().toISOString(),
     },
   ])
   const [inputText, setInputText] = useState<string>('')
   const [isStreaming, setIsStreaming] = useState<boolean>(false)
   const [currentTraceEvents, setCurrentTraceEvents] = useState<TraceEvent[]>([])
-  const [approvalDecision, setApprovalDecision] = useState<{ [woId: string]: 'APPROVED' | 'REJECTED' }>({})
+  const [approvalDecision, setApprovalDecision] = useState<{ [messageId: string]: 'APPROVED' | 'REJECTED' }>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
 
     const agentMsgId = `agent-${Date.now()}`
     const collectedEvents: TraceEvent[] = []
-    let pendingApproval: { routeId: string; workOrderId: string } | undefined
+    let pendingApproval: { routeId: string; threadId: string } | undefined
 
     await apiClient.streamChat(
       text,
@@ -89,10 +89,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
 
         // Check if approval request event
         if (ev.type === 'approval_request') {
-          const rId = (ev.payload?.route_id as string) ?? 'R-MOCK-1'
+          const rId = (ev.payload?.route_id as string) ?? 'route plan'
           pendingApproval = {
             routeId: rId,
-            workOrderId: `WO-${rId.replace('R-', '')}`,
+            threadId: (ev.payload?.thread_id as string) ?? 'web-session',
           }
         }
       },
@@ -127,20 +127,46 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
     )
   }
 
-  const handleDecision = async (woId: string, approved: boolean) => {
-    const decision: Decision = {
+  const handleDecision = async (messageId: string, threadId: string, approved: boolean) => {
+    setIsStreaming(true)
+    setCurrentTraceEvents([])
+    const resumedEvents: TraceEvent[] = []
+    await apiClient.resumeChat(
+      threadId,
       approved,
-      comment: approved ? 'Approved by supervisor via chat' : 'Rejected via chat - replan required',
-      decided_by: 'supervisor',
-    }
-    await apiClient.decideWorkOrder(woId, decision)
-    setApprovalDecision((prev) => ({
-      ...prev,
-      [woId]: approved ? 'APPROVED' : 'REJECTED',
-    }))
-    if (approved && onRouteApproved) {
-      onRouteApproved()
-    }
+      'supervisor',
+      (event) => {
+        resumedEvents.push(event)
+        setCurrentTraceEvents([...resumedEvents])
+      },
+      (error) => {
+        console.error('Chat resume error:', error)
+        setIsStreaming(false)
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId
+              ? { ...message, text: `Unable to ${approved ? 'approve' : 'reject'} the route: ${error.message}` }
+              : message
+          )
+        )
+      },
+      () => {
+        setIsStreaming(false)
+        setCurrentTraceEvents([])
+        setApprovalDecision((prev) => ({
+          ...prev,
+          [messageId]: approved ? 'APPROVED' : 'REJECTED',
+        }))
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId
+              ? { ...message, traceEvents: [...(message.traceEvents ?? []), ...resumedEvents] }
+              : message
+          )
+        )
+        if (approved && onRouteApproved) onRouteApproved()
+      },
+    )
   }
 
   const getAgentBadgeColor = (agent: string) => {
@@ -256,7 +282,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
               ) : (
                 <>
                   <Bot size={13} color="var(--accent-cyan)" />
-                  <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>WasteCopilot Agent</span>
+                  <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Binlytics Agent</span>
                 </>
               )}
               <span className="font-mono">· {formatTimeOnlyIST(m.ts)}</span>
@@ -374,20 +400,20 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
                   </p>
 
                   <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    {approvalDecision[m.workOrderPending.workOrderId] ? (
+                    {approvalDecision[m.id] ? (
                       <span
                         className={`badge ${
-                          approvalDecision[m.workOrderPending.workOrderId] === 'APPROVED'
+                          approvalDecision[m.id] === 'APPROVED'
                             ? 'badge-real'
                             : 'badge-high'
                         }`}
                       >
-                        {approvalDecision[m.workOrderPending.workOrderId]}
+                        {approvalDecision[m.id]}
                       </span>
                     ) : (
                       <>
                         <button
-                          onClick={() => handleDecision(m.workOrderPending!.workOrderId, true)}
+                          onClick={() => handleDecision(m.id, m.workOrderPending!.threadId, true)}
                           className="btn btn-success"
                           style={{ fontSize: '0.78rem', padding: '6px 14px' }}
                         >
@@ -395,7 +421,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
                           Approve Route Plan
                         </button>
                         <button
-                          onClick={() => handleDecision(m.workOrderPending!.workOrderId, false)}
+                          onClick={() => handleDecision(m.id, m.workOrderPending!.threadId, false)}
                           className="btn btn-danger"
                           style={{ fontSize: '0.78rem', padding: '6px 14px' }}
                         >
@@ -488,7 +514,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onRouteApproved }) => {
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Ask WasteCopilot (e.g. 'Plan tonight's collection' or 'Can food waste be composted?')..."
+          placeholder="Ask Binlytics (e.g. 'Plan tonight's collection' or 'Can food waste be composted?')..."
           disabled={isStreaming}
           style={{
             flex: 1,

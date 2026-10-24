@@ -1,4 +1,4 @@
-# Campus Waste Copilot
+# Binlytics
 Agentic waste-management copilot for campuses (SOCIOTHON 2026). Start with **docs/SETUP.md** (install), **CONTEXT.md**, then **docs/FEATURES.md** (what to build), **docs/TASKS.md** (checklist) and **docs/PROMPTS.md** (what to paste into your AI).
 
 ```bash

@@ -188,7 +188,7 @@ export const ImpactPitch: React.FC<ImpactPitchProps> = ({ onNavigateTab }) => {
               <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '12px 14px' }}>Metric</th>
                 <th style={{ padding: '12px 14px' }}>Baseline (Fixed Daily 06:00)</th>
-                <th style={{ padding: '12px 14px' }}>WasteCopilot (Risk-Triggered)</th>
+                <th style={{ padding: '12px 14px' }}>Binlytics (Risk-Triggered)</th>
                 <th style={{ padding: '12px 14px' }}>Performance Delta</th>
               </tr>
             </thead>
