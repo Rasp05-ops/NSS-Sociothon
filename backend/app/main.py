@@ -15,6 +15,7 @@ from shared.constants import WorkOrderStatus
 from shared.schemas import (Bin, ChatRequest, CompareResponse, TrendResponse, Decision, ForecastResponse, KPIs, RagAnswer, Reading,
                             RoutePlanRequest, RoutePlanResponse, TraceEvent, WorkOrder, WorkOrderCreate)
 from . import real
+from . import db
 
 FIX = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
 USE_MOCKS = os.getenv("USE_MOCKS", "true").lower() == "true"
@@ -76,21 +77,20 @@ def plan(req: RoutePlanRequest):
 def create_work_order(body: WorkOrderCreate):
     wo = WorkOrder(work_order_id=f"WO-{uuid.uuid4().hex[:6].upper()}", route_id=body.route_id, status=WorkOrderStatus.DRAFT,
                    created_ts=datetime.now(timezone.utc), notes=body.notes, route=body.route)
-    WORK_ORDERS[wo.work_order_id] = wo
-    return wo
+    return db.insert_work_order(wo)
 
 
 @r.get("/work-orders", response_model=list[WorkOrder])
 def list_work_orders(status: str | None = None):
-    return [w for w in WORK_ORDERS.values() if status is None or w.status == status]
+    return db.list_work_orders(status)
 
 
 def _decide(wo_id: str, d: Decision, status: WorkOrderStatus):
-    wo = WORK_ORDERS.get(wo_id)
+    wo = db.get_work_order(wo_id)
     if not wo:
         raise HTTPException(404, "work order not found")
     wo.status, wo.decided_by, wo.notes = status, d.decided_by, d.comment or wo.notes
-    return wo
+    return db.update_work_order(wo)
 
 
 @r.post("/work-orders/{wo_id}/approve", response_model=WorkOrder)
