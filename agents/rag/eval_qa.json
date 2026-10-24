@@ -1,0 +1,8 @@
+[
+  {"q": "Can mess food waste be composted on campus, and what does the SOP/rules say?", "expect_docs": ["campus-sop", "swm-rules-2016"]},
+  {"q": "How should e-waste from hostels be handled and who can collect it?", "expect_docs": ["ewaste-rules", "campus-sop"]},
+  {"q": "Which categories must be segregated at source?", "expect_docs": ["swm-rules-2016"]},
+  {"q": "Who is responsible for segregating plastic waste?", "expect_docs": ["pwm-rules"]},
+  {"q": "What is the weather in Roorkee tomorrow?", "expect_abstain": true},
+  {"q": "TODO(B): add 10 more questions with expected docs and 2 more out-of-scope questions that must abstain", "expect_docs": []}
+]

@@ -1,0 +1,12 @@
+# core (everyone): backend, MCP, graph, tests
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+httpx>=0.27
+numpy
+pandas
+pyyaml
+mcp<2
+langgraph
+google-genai
+pytest

@@ -1,0 +1,72 @@
+{
+  "period_days": 7,
+  "buildings": [
+    {
+      "building_id": "H01",
+      "name": "Hostel 1",
+      "kind": "hostel",
+      "kg_period": 654.5,
+      "kg_per_person_day": 0.187,
+      "wow_change_pct": -6.2,
+      "segregation_pct": 79.4,
+      "recycling_pct": 53.0,
+      "rank": 4
+    },
+    {
+      "building_id": "H02",
+      "name": "Hostel 2",
+      "kind": "hostel",
+      "kg_period": 573.3,
+      "kg_per_person_day": 0.182,
+      "wow_change_pct": 5.3,
+      "segregation_pct": 84.1,
+      "recycling_pct": 41.9,
+      "rank": 2
+    },
+    {
+      "building_id": "H03",
+      "name": "Hostel 3",
+      "kind": "hostel",
+      "kg_period": 574.0,
+      "kg_per_person_day": 0.205,
+      "wow_change_pct": -7.4,
+      "segregation_pct": 56.3,
+      "recycling_pct": 53.8,
+      "rank": 5
+    },
+    {
+      "building_id": "ACAD01",
+      "name": "Academic Block",
+      "kind": "academic",
+      "kg_period": 585.9,
+      "kg_per_person_day": 0.186,
+      "wow_change_pct": 1.6,
+      "segregation_pct": 63.5,
+      "recycling_pct": 49.2,
+      "rank": 3
+    },
+    {
+      "building_id": "MESS01",
+      "name": "Central Mess",
+      "kind": "mess",
+      "kg_period": 1243.2,
+      "kg_per_person_day": 0.222,
+      "wow_change_pct": -4.6,
+      "segregation_pct": 60.8,
+      "recycling_pct": 45.8,
+      "rank": 6
+    },
+    {
+      "building_id": "LIB01",
+      "name": "Library",
+      "kind": "library",
+      "kg_period": 354.9,
+      "kg_per_person_day": 0.169,
+      "wow_change_pct": -5.6,
+      "segregation_pct": 73.5,
+      "recycling_pct": 50.1,
+      "rank": 1
+    }
+  ],
+  "source": "mock"
+}

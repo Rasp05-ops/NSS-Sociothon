@@ -1,0 +1,14 @@
+{
+  "question": "Can mess food waste be composted on campus?",
+  "answer": "MOCK ANSWER. Replace with a grounded answer that cites clauses from the indexed rules.",
+  "citations": [
+    {
+      "doc_id": "swm-rules-2016",
+      "title": "Solid Waste Management Rules, 2016",
+      "clause": "TODO",
+      "snippet": "MOCK snippet.",
+      "score": 0.0
+    }
+  ],
+  "abstained": false
+}

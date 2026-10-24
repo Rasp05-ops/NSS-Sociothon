@@ -1,0 +1,50 @@
+[
+  {
+    "trace_id": "T-MOCK",
+    "ts": "2026-10-24T06:00:00Z",
+    "agent": "planner",
+    "type": "tool_call",
+    "payload": {
+      "tool": "plan_routes",
+      "args": {
+        "horizon_h": 12,
+        "trucks": 2
+      }
+    }
+  },
+  {
+    "trace_id": "T-MOCK",
+    "ts": "2026-10-24T06:00:01Z",
+    "agent": "planner",
+    "type": "tool_result",
+    "payload": {
+      "tool": "plan_routes",
+      "summary": "2 routes, 2.69 km"
+    }
+  },
+  {
+    "trace_id": "T-MOCK",
+    "ts": "2026-10-24T06:00:02Z",
+    "agent": "critic",
+    "type": "message",
+    "payload": {
+      "text": "Route R-MOCK-1 within shift limit. OK."
+    }
+  },
+  {
+    "trace_id": "T-MOCK",
+    "ts": "2026-10-24T06:00:03Z",
+    "agent": "dispatcher",
+    "type": "approval_request",
+    "payload": {
+      "route_id": "R-MOCK-1"
+    }
+  },
+  {
+    "trace_id": "T-MOCK",
+    "ts": "2026-10-24T06:00:04Z",
+    "agent": "system",
+    "type": "done",
+    "payload": {}
+  }
+]

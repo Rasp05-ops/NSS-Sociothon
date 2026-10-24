@@ -1,0 +1,7 @@
+# heavy (A for forecasting/routing, B for RAG). Install with: make setup-ml
+lightgbm
+scikit-learn
+ortools
+rank-bm25
+sentence-transformers
+chromadb

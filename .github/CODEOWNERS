@@ -1,0 +1,7 @@
+# Replace with real GitHub handles
+/backend/                @personA
+/agents/                 @personB
+/frontend/               @personC
+/docs/demo.md            @personC
+/shared/                 @personA @personB @personC
+/CONTEXT.md              @personA @personB @personC

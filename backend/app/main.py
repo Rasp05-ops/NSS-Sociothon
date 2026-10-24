@@ -1,0 +1,144 @@
+"""OWNER: A (endpoints), C reads /openapi.json to generate TS types. Run: make backend
+Every endpoint serves a FIXTURE until its real implementation in real.py exists. `source` field says which."""
+import asyncio
+import json
+import os
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
+from fastapi import APIRouter, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+
+from shared.constants import WorkOrderStatus
+from shared.schemas import (Bin, ChatRequest, CompareResponse, TrendResponse, Decision, ForecastResponse, KPIs, RagAnswer, Reading,
+                            RoutePlanRequest, RoutePlanResponse, TraceEvent, WorkOrder, WorkOrderCreate)
+from . import real
+
+FIX = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
+USE_MOCKS = os.getenv("USE_MOCKS", "true").lower() == "true"
+REAL = {s.strip() for s in os.getenv("REAL_ENDPOINTS", "").split(",") if s.strip()}
+
+app = FastAPI(title="Campus Waste Copilot API", version="0.1.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+def fx(name):
+    return json.loads((FIX / name).read_text())
+
+
+def serve(name, real_fn, mock_fn):
+    """Use real impl if enabled and implemented; otherwise the mock."""
+    if (not USE_MOCKS) or name in REAL:
+        try:
+            return real_fn()
+        except NotImplementedError:
+            pass
+    return mock_fn()
+
+
+WORK_ORDERS: dict[str, WorkOrder] = {}  # mock state; A moves to SQLite table work_orders
+
+r = APIRouter(prefix="/api/v1")
+
+
+@r.get("/health")
+def health():
+    return {"ok": True, "use_mocks": USE_MOCKS, "real_endpoints": sorted(REAL)}
+
+
+@r.get("/bins", response_model=list[Bin])
+def get_bins(building_id: str | None = None, min_risk: float = 0.0):
+    data = serve("bins", lambda: real.bins(), lambda: [Bin(**b) for b in fx("bins.json")])
+    return [b for b in data if (building_id is None or b.building_id == building_id) and b.risk_overflow >= min_risk]
+
+
+@r.get("/bins/{bin_id}/readings", response_model=list[Reading])
+def get_readings(bin_id: str, ts_from: datetime | None = Query(None, alias="from"),
+                 ts_to: datetime | None = Query(None, alias="to")):
+    return serve("readings", lambda: real.readings(bin_id, ts_from, ts_to),
+                 lambda: [Reading(**{**x, "bin_id": bin_id}) for x in fx("readings_sample.json")])
+
+
+@r.get("/forecast", response_model=ForecastResponse)
+def get_forecast(building_id: str, days: int = 7):
+    return serve("forecast", lambda: real.forecast(building_id, days),
+                 lambda: ForecastResponse(**{**fx("forecast.json"), "building_id": building_id}))
+
+
+@r.post("/routes/plan", response_model=RoutePlanResponse)
+def plan(req: RoutePlanRequest):
+    return serve("routes", lambda: real.plan_routes(req), lambda: RoutePlanResponse(**fx("route_plan.json")))
+
+
+@r.post("/work-orders", response_model=WorkOrder)
+def create_work_order(body: WorkOrderCreate):
+    wo = WorkOrder(work_order_id=f"WO-{uuid.uuid4().hex[:6].upper()}", route_id=body.route_id, status=WorkOrderStatus.DRAFT,
+                   created_ts=datetime.now(timezone.utc), notes=body.notes, route=body.route)
+    WORK_ORDERS[wo.work_order_id] = wo
+    return wo
+
+
+@r.get("/work-orders", response_model=list[WorkOrder])
+def list_work_orders(status: str | None = None):
+    return [w for w in WORK_ORDERS.values() if status is None or w.status == status]
+
+
+def _decide(wo_id: str, d: Decision, status: WorkOrderStatus):
+    wo = WORK_ORDERS.get(wo_id)
+    if not wo:
+        raise HTTPException(404, "work order not found")
+    wo.status, wo.decided_by, wo.notes = status, d.decided_by, d.comment or wo.notes
+    return wo
+
+
+@r.post("/work-orders/{wo_id}/approve", response_model=WorkOrder)
+def approve(wo_id: str, d: Decision = Decision(approved=True)):
+    return _decide(wo_id, d, WorkOrderStatus.APPROVED)
+
+
+@r.post("/work-orders/{wo_id}/reject", response_model=WorkOrder)
+def reject(wo_id: str, d: Decision = Decision(approved=False)):
+    return _decide(wo_id, d, WorkOrderStatus.REJECTED)
+
+
+@r.get("/kpis", response_model=KPIs)
+def get_kpis(building_id: str | None = None):
+    return serve("kpis", lambda: real.kpis(building_id), lambda: KPIs(**{**fx("kpis.json"), "building_id": building_id}))
+
+
+@r.get("/trends", response_model=TrendResponse)
+def get_trends(building_id: str | None = None, granularity: str = "day", days: int = 30):
+    return serve("trends", lambda: real.trends(building_id, granularity, days),
+                 lambda: TrendResponse(**{**fx("trends.json"), "building_id": building_id, "granularity": granularity}))
+
+
+@r.get("/compare", response_model=CompareResponse)
+def get_compare(days: int = 7):
+    return serve("compare", lambda: real.compare(days), lambda: CompareResponse(**fx("compare.json")))
+
+
+@r.get("/rag/ask", response_model=RagAnswer)
+def rag_ask(q: str):
+    """B wires agents.rag.interface.answer here (import inside the function to keep backend importable without ML deps)."""
+    try:
+        from agents.rag.interface import answer
+        return answer(q)
+    except NotImplementedError:
+        return RagAnswer(**{**fx("rag_answer.json"), "question": q})
+
+
+@r.post("/chat")
+async def chat(req: ChatRequest):
+    """SSE stream of TraceEvent. MOCK replays fixtures; B replaces the generator with the LangGraph run
+    (stream node updates -> TraceEvent). Approval: emit type=approval_request, UI calls /work-orders/{id}/approve."""
+    async def gen():
+        for e in fx("trace_events.json"):
+            e["ts"] = datetime.now(timezone.utc).isoformat()
+            yield f"data: {TraceEvent(**e).model_dump_json()}\n\n"
+            await asyncio.sleep(0.6)
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+app.include_router(r)
