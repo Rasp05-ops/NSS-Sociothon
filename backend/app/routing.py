@@ -243,7 +243,13 @@ def plan_routes_ortools(flagged_bins: List[Bin], all_bins: List[Bin], req: Route
         payload = 0
         for bin_item in sorted_flagged:
             demand = max(0, round(bin_item.fill_pct / 100.0 * bin_item.capacity_l * WASTE_DENSITY_KG_PER_L))
-            if chunk and payload + demand > TRUCK_CAPACITY_KG:
+            candidate = chunk + [bin_item]
+            candidate_route = heuristic_fallback_route(candidate, "T1", "R-CHECK")
+            if chunk and (
+                payload + demand > TRUCK_CAPACITY_KG
+                or candidate_route.est_min > TRUCK_SHIFT_MIN
+                or len(candidate) > MAX_STOPS_PER_ROUTE
+            ):
                 chunks.append(chunk)
                 chunk, payload = [], 0
             chunk.append(bin_item)

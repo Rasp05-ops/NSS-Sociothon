@@ -9,6 +9,7 @@ import json
 from typing import Any, TypedDict
 
 import httpx
+from dotenv import load_dotenv
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt  # noqa: F401  (Command re-exported for callers)
@@ -16,6 +17,7 @@ from langgraph.types import Command, interrupt  # noqa: F401  (Command re-export
 from shared.constants import MAX_STOPS_PER_ROUTE, TRUCK_SHIFT_MIN
 from .llm import ask
 
+load_dotenv()
 BASE = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 http: httpx.Client | None = None  # tests inject a TestClient here
 

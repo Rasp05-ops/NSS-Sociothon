@@ -325,6 +325,9 @@ export const apiClient = {
     } catch {
       // Fallback
     }
+    if (!ALLOW_MOCK_FALLBACK) {
+      throw new Error('Loading rules answer failed. Check that the backend is running.')
+    }
 
     // Context-sensitive demo answer
     const qLower = question.toLowerCase()

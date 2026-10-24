@@ -34,7 +34,7 @@ POST /work-orders {route_id,notes?,route?} -> WorkOrder(DRAFT) · GET /work-orde
 GET /kpis?building_id -> KPIs (incl. recycling_pct, waste_change_wow_pct) · GET /trends?building_id&granularity=day|week&days -> TrendResponse · GET /compare?days -> CompareResponse · GET /rag/ask?q -> RagAnswer · POST /chat (SSE of TraceEvent, ALWAYS ends with type=done)
 
 ## Mock-first workflow (nobody waits for anybody)
-- `USE_MOCKS=true` (default): every endpoint serves `shared/fixtures/*.json`. Responses carry `source: "mock"|"real"`.
+- `USE_MOCKS=true`: explicitly opt into fixture-backed endpoints for demos. The runtime default is real mode (`USE_MOCKS=false`); responses carry `source: "mock"|"real"`.
 - A flips endpoints one by one via `REAL_ENDPOINTS=forecast,routes` as real versions land in `backend/app/real.py`.
 - Real functions MUST return the same schema as the mock. Changing a schema? Edit `shared/schemas.py` -> `make fixtures` -> tell the team -> then code.
 
